@@ -4,9 +4,7 @@
     {
       "customType": "regex",
       "datasourceTemplate": "{{#if (equals datasource 'github')}}github-tags{{else}}{{{datasource}}}{{/if}}",
-      "managerFilePatterns": [
-        "/^.*$/"
-      ],
+      "managerFilePatterns": ["/^.*$/"],
       "matchStrings": [
         "\\s*#\\s?renovate: (?<datasource>.*?)=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+[\\w+\\.\\-]+(?:[:=]|\\s+\\S+)\\s*[\\\"']?(?<currentValue>[\\w+\\.\\-]*)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"']?"
       ],
@@ -27,12 +25,7 @@
     {
       "automerge": true,
       "automergeStrategy": "rebase",
-      "matchUpdateTypes": [
-        "patch",
-        "pin",
-        "lockFileMaintenance",
-        "digest"
-      ]
+      "matchUpdateTypes": ["patch", "pin", "lockFileMaintenance", "digest"]
     }
   ]
 }
