@@ -9,7 +9,14 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/meysam81/scry/internal/logger"
 )
+
+// internalClient is a shared HTTP client with a reasonable timeout for
+// internal fetches (robots.txt, sitemaps) that should not use http.DefaultClient.
+var internalClient = &http.Client{Timeout: 15 * time.Second}
 
 // robotsRule represents a single Allow or Disallow directive.
 type robotsRule struct {
@@ -25,15 +32,17 @@ type robotsRules struct {
 // RobotsChecker fetches, parses, and caches robots.txt files per host.
 type RobotsChecker struct {
 	userAgent string
+	log       logger.Logger
 
 	mu    sync.RWMutex
 	cache map[string]*robotsRules
 }
 
 // NewRobotsChecker creates a new RobotsChecker that matches against the given user agent.
-func NewRobotsChecker(userAgent string) *RobotsChecker {
+func NewRobotsChecker(userAgent string, l logger.Logger) *RobotsChecker {
 	return &RobotsChecker{
 		userAgent: userAgent,
+		log:       l,
 		cache:     make(map[string]*robotsRules),
 	}
 }
@@ -70,11 +79,15 @@ func (rc *RobotsChecker) fetchAndCache(ctx context.Context, scheme, host string)
 		return rc.cacheEmpty(host)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := internalClient.Do(req)
 	if err != nil {
 		return rc.cacheEmpty(host)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			rc.log.Warn().Err(err).Str("host", host).Msg("robots.txt body close failed")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return rc.cacheEmpty(host)
@@ -99,15 +112,20 @@ func (rc *RobotsChecker) cacheEmpty(host string) *robotsRules {
 }
 
 // parseRobotsTxt parses robots.txt content, extracting rules for the given user agent.
+// Consecutive User-agent lines form a group that shares subsequent directives.
+// TODO: Support robots.txt wildcard patterns (* and $).
 func parseRobotsTxt(r io.Reader, userAgent string) *robotsRules {
 	scanner := bufio.NewScanner(r)
 	ua := strings.ToLower(userAgent)
 
 	var allRules robotsRules
 	var specificRules robotsRules
-	inMatchingSection := false
-	inWildcardSection := false
 	foundSpecific := false
+
+	// Track state for the current UA group.
+	inUABlock := false     // true while reading consecutive User-agent lines
+	groupHasMatch := false // true if any UA line in the current group matches our agent
+	groupHasWild := false  // true if any UA line in the current group is "*"
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -129,43 +147,40 @@ func parseRobotsTxt(r io.Reader, userAgent string) *robotsRules {
 		value := strings.TrimSpace(parts[1])
 
 		if key == "user-agent" {
+			if !inUABlock {
+				// Starting a new group — reset group flags.
+				inUABlock = true
+				groupHasMatch = false
+				groupHasWild = false
+			}
 			agent := strings.ToLower(value)
 			if agent == "*" {
-				inWildcardSection = true
-				inMatchingSection = false
-			} else if strings.Contains(ua, agent) || strings.Contains(agent, ua) {
-				inMatchingSection = true
-				inWildcardSection = false
+				groupHasWild = true
+			} else if strings.Contains(ua, agent) {
+				groupHasMatch = true
 				foundSpecific = true
-			} else {
-				inMatchingSection = false
-				inWildcardSection = false
 			}
 			continue
 		}
 
-		if key == "disallow" && (inMatchingSection || inWildcardSection) {
-			if value == "" {
-				continue
-			}
-			rule := robotsRule{path: value, allow: false}
-			if inMatchingSection {
-				specificRules.rules = append(specificRules.rules, rule)
-			} else {
-				allRules.rules = append(allRules.rules, rule)
-			}
+		// Non-UA directive — transition out of UA block.
+		inUABlock = false
+
+		if key != "disallow" && key != "allow" {
+			continue
+		}
+		if !groupHasMatch && !groupHasWild {
+			continue
+		}
+		if value == "" {
+			continue
 		}
 
-		if key == "allow" && (inMatchingSection || inWildcardSection) {
-			if value == "" {
-				continue
-			}
-			rule := robotsRule{path: value, allow: true}
-			if inMatchingSection {
-				specificRules.rules = append(specificRules.rules, rule)
-			} else {
-				allRules.rules = append(allRules.rules, rule)
-			}
+		rule := robotsRule{path: value, allow: key == "allow"}
+		if groupHasMatch {
+			specificRules.rules = append(specificRules.rules, rule)
+		} else {
+			allRules.rules = append(allRules.rules, rule)
 		}
 	}
 

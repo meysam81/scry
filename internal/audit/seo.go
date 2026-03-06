@@ -32,8 +32,8 @@ func (c *SEOChecker) Check(_ context.Context, page *model.Page) []model.Issue {
 	if !isHTMLContent(page) {
 		return nil
 	}
-	doc, err := parseHTMLDoc(page.Body)
-	if err != nil {
+	doc := parseHTMLDocLog(page.Body, page.URL)
+	if doc == nil {
 		return nil
 	}
 
@@ -56,8 +56,8 @@ func (c *SEOChecker) CheckSite(_ context.Context, pages []*model.Page) []model.I
 		if !isHTMLContent(p) || !p.InSitemap {
 			continue
 		}
-		doc, err := parseHTMLDoc(p.Body)
-		if err != nil {
+		doc := parseHTMLDocLog(p.Body, p.URL)
+		if doc == nil {
 			continue
 		}
 		robots := findMeta(doc, "robots")

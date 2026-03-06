@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
 
 	"golang.org/x/time/rate"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -50,10 +52,11 @@ type PSIClient struct {
 	strategy string
 	client   *http.Client
 	limiter  *rate.Limiter
+	log      logger.Logger
 }
 
 // NewPSIClient creates a PSI client with appropriate rate limiting.
-func NewPSIClient(apiKey, strategy string) *PSIClient {
+func NewPSIClient(apiKey, strategy string, l logger.Logger) *PSIClient {
 	rps := psiRateLimitNoKey
 	if apiKey != "" {
 		rps = psiRateLimitWithKey
@@ -66,6 +69,7 @@ func NewPSIClient(apiKey, strategy string) *PSIClient {
 			Timeout: PSITimeout,
 		},
 		limiter: rate.NewLimiter(rate.Limit(rps), rps),
+		log:     l,
 	}
 }
 
@@ -89,10 +93,15 @@ func (c *PSIClient) Run(ctx context.Context, targetURL string) (*model.Lighthous
 	if err != nil {
 		return nil, fmt.Errorf("psi request failed: %w", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.log.Warn().Err(err).Str("url", targetURL).Msg("psi resp body close failed")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("psi api returned status %d", resp.StatusCode)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		return nil, fmt.Errorf("psi api returned status %d: %s", resp.StatusCode, body)
 	}
 
 	var psi psiResponse

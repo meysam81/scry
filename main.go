@@ -14,6 +14,7 @@ import (
 	"github.com/meysam81/scry/cmd/check"
 	"github.com/meysam81/scry/cmd/crawl"
 	"github.com/meysam81/scry/cmd/lighthouse"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 func main() {
@@ -86,27 +87,27 @@ func setupLogger(ctx context.Context, cmd *cli.Command) (context.Context, error)
 	format := cmd.String("log-format")
 	level := cmd.String("log-level")
 
-	var logger zerolog.Logger
+	var zl zerolog.Logger
 
 	switch format {
 	case "json":
-		logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+		zl = zerolog.New(os.Stderr).With().Timestamp().Logger()
 	default:
-		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+		zl = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 	}
 
 	switch level {
 	case "debug":
-		logger = logger.Level(zerolog.DebugLevel)
+		zl = zl.Level(zerolog.DebugLevel)
 	case "warn":
-		logger = logger.Level(zerolog.WarnLevel)
+		zl = zl.Level(zerolog.WarnLevel)
 	case "error":
-		logger = logger.Level(zerolog.ErrorLevel)
+		zl = zl.Level(zerolog.ErrorLevel)
 	default:
-		logger = logger.Level(zerolog.InfoLevel)
+		zl = zl.Level(zerolog.InfoLevel)
 	}
 
-	log.Logger = logger
+	log.Logger = zl
 
-	return ctx, nil
+	return logger.WithContext(ctx, logger.New(zl)), nil
 }

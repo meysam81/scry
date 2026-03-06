@@ -2,12 +2,17 @@ package audit
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"strings"
 	"sync"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 	"golang.org/x/net/html"
 )
+
+// auditLogger is set via SetLogger before checks run.
+var auditLogger = logger.Nop()
 
 // docCache caches parsed HTML documents keyed by the body content hash.
 var docCache sync.Map
@@ -20,10 +25,20 @@ func clearDocCache() {
 	})
 }
 
+// parseHTMLDocLog parses body bytes and logs a warning on failure.
+func parseHTMLDocLog(body []byte, pageURL string) *html.Node {
+	doc, err := parseHTMLDoc(body)
+	if err != nil {
+		auditLogger.Warn().Err(err).Str("url", pageURL).Msg("html parse failed")
+		return nil
+	}
+	return doc
+}
+
 // parseHTMLDoc parses body bytes into an *html.Node tree.
-// Results are cached using a sync.Map keyed by body slice identity.
+// Results are cached using a sync.Map keyed by SHA-256 hash of the body.
 func parseHTMLDoc(body []byte) (*html.Node, error) {
-	key := string(body)
+	key := sha256.Sum256(body)
 	if cached, ok := docCache.Load(key); ok {
 		return cached.(*html.Node), nil
 	}
@@ -37,7 +52,7 @@ func parseHTMLDoc(body []byte) (*html.Node, error) {
 
 // isHTMLContent reports whether the page's ContentType indicates HTML.
 func isHTMLContent(page *model.Page) bool {
-	return strings.Contains(page.ContentType, "text/html")
+	return strings.Contains(strings.ToLower(page.ContentType), "text/html")
 }
 
 // findNodes recursively finds all elements with the given tag name.

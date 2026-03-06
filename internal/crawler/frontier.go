@@ -76,7 +76,16 @@ func (f *Frontier) Dequeue() (FrontierTask, bool) {
 	}
 
 	task := f.queue[0]
+	f.queue[0] = FrontierTask{} // zero to release references
 	f.queue = f.queue[1:]
+
+	// Compact when the queue is mostly empty to reclaim memory.
+	if cap(f.queue) > 64 && len(f.queue) < cap(f.queue)/4 {
+		compact := make([]FrontierTask, len(f.queue))
+		copy(compact, f.queue)
+		f.queue = compact
+	}
+
 	return task, true
 }
 

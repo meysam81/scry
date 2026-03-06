@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -34,12 +35,12 @@ type Runner interface {
 }
 
 // NewRunner creates the appropriate lighthouse Runner based on config.
-func NewRunner(cfg *config.Config) (Runner, error) {
+func NewRunner(cfg *config.Config, l logger.Logger) (Runner, error) {
 	switch cfg.LighthouseMode {
 	case "browserless":
-		return NewBrowserlessClient(cfg.BrowserlessURL), nil
+		return NewBrowserlessClient(cfg.BrowserlessURL, l), nil
 	case "psi":
-		return NewPSIClient(cfg.PSIApiKey, cfg.PSIStrategy), nil
+		return NewPSIClient(cfg.PSIAPIKey, cfg.PSIStrategy, l), nil
 	default:
 		return nil, fmt.Errorf("unknown lighthouse mode: %q", cfg.LighthouseMode)
 	}
@@ -47,6 +48,9 @@ func NewRunner(cfg *config.Config) (Runner, error) {
 
 // ScoreToIssues converts a LighthouseResult into issues based on score thresholds.
 func ScoreToIssues(result *model.LighthouseResult) []model.Issue {
+	if result == nil {
+		return nil
+	}
 	var issues []model.Issue
 
 	// Performance scoring.
@@ -55,14 +59,14 @@ func ScoreToIssues(result *model.LighthouseResult) []model.Issue {
 		issues = append(issues, model.Issue{
 			CheckName: CheckPerformance,
 			Severity:  model.SeverityCritical,
-			Message:   fmt.Sprintf("performance score %0.f is below %d", result.PerformanceScore, PerfCriticalThreshold),
+			Message:   fmt.Sprintf("performance score %.0f is below %d", result.PerformanceScore, PerfCriticalThreshold),
 			URL:       result.URL,
 		})
 	case result.PerformanceScore < PerfWarningThreshold:
 		issues = append(issues, model.Issue{
 			CheckName: CheckPerformance,
 			Severity:  model.SeverityWarning,
-			Message:   fmt.Sprintf("performance score %0.f is below %d", result.PerformanceScore, PerfWarningThreshold),
+			Message:   fmt.Sprintf("performance score %.0f is below %d", result.PerformanceScore, PerfWarningThreshold),
 			URL:       result.URL,
 		})
 	}
@@ -72,7 +76,7 @@ func ScoreToIssues(result *model.LighthouseResult) []model.Issue {
 		issues = append(issues, model.Issue{
 			CheckName: CheckAccessibility,
 			Severity:  model.SeverityWarning,
-			Message:   fmt.Sprintf("accessibility score %0.f is below %d", result.AccessibilityScore, AccessibilityWarningThreshold),
+			Message:   fmt.Sprintf("accessibility score %.0f is below %d", result.AccessibilityScore, AccessibilityWarningThreshold),
 			URL:       result.URL,
 		})
 	}
@@ -82,7 +86,7 @@ func ScoreToIssues(result *model.LighthouseResult) []model.Issue {
 		issues = append(issues, model.Issue{
 			CheckName: CheckSEO,
 			Severity:  model.SeverityWarning,
-			Message:   fmt.Sprintf("seo score %0.f is below %d", result.SEOScore, SEOWarningThreshold),
+			Message:   fmt.Sprintf("seo score %.0f is below %d", result.SEOScore, SEOWarningThreshold),
 			URL:       result.URL,
 		})
 	}

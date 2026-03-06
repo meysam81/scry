@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -42,7 +43,7 @@ func TestPSIClientRun_Success(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewPSIClient("", "mobile")
+	client := NewPSIClient("", "mobile", logger.Nop())
 	// Override the client to use the test server.
 	client.client = srv.Client()
 
@@ -95,7 +96,7 @@ func TestPSIClientRun_WithAPIKey(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewPSIClient("test-key-123", "desktop")
+	client := NewPSIClient("test-key-123", "desktop", logger.Nop())
 	client.client = srv.Client()
 
 	result, err := runWithOverriddenEndpoint(client, srv.URL, "https://example.com")
@@ -114,7 +115,7 @@ func TestPSIClientRun_ErrorResponse(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewPSIClient("", "mobile")
+	client := NewPSIClient("", "mobile", logger.Nop())
 	client.client = srv.Client()
 
 	_, err := runWithOverriddenEndpoint(client, srv.URL, "https://example.com")
@@ -130,7 +131,7 @@ func TestPSIClientRun_InvalidJSON(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewPSIClient("", "mobile")
+	client := NewPSIClient("", "mobile", logger.Nop())
 	client.client = srv.Client()
 
 	_, err := runWithOverriddenEndpoint(client, srv.URL, "https://example.com")
@@ -147,7 +148,7 @@ func TestPSIClientRun_NilScores(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewPSIClient("", "mobile")
+	client := NewPSIClient("", "mobile", logger.Nop())
 	client.client = srv.Client()
 
 	result, err := runWithOverriddenEndpoint(client, srv.URL, "https://example.com")
@@ -164,7 +165,7 @@ func TestPSIClientRun_NilScores(t *testing.T) {
 }
 
 func TestNewPSIClient_RateLimitNoKey(t *testing.T) {
-	client := NewPSIClient("", "mobile")
+	client := NewPSIClient("", "mobile", logger.Nop())
 	lim := client.RateLimit()
 	if lim.Limit() != 1 {
 		t.Errorf("rate limit without key = %v, want 1", lim.Limit())
@@ -172,7 +173,7 @@ func TestNewPSIClient_RateLimitNoKey(t *testing.T) {
 }
 
 func TestNewPSIClient_RateLimitWithKey(t *testing.T) {
-	client := NewPSIClient("my-key", "mobile")
+	client := NewPSIClient("my-key", "mobile", logger.Nop())
 	lim := client.RateLimit()
 	if lim.Limit() != 25 {
 		t.Errorf("rate limit with key = %v, want 25", lim.Limit())

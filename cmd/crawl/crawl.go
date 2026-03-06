@@ -13,6 +13,7 @@ import (
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/crawler"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 // Command returns the cli.Command for the crawl subcommand.
@@ -116,7 +117,7 @@ func runCrawl(ctx context.Context, cmd *cli.Command) error {
 	seedURL = cmdutil.NormalizeURL(seedURL)
 
 	// Create fetcher.
-	fetcher, cleanup, err := crawler.NewFetcher(cfg)
+	fetcher, cleanup, err := crawler.NewFetcher(cfg, logger.FromContext(ctx))
 	if err != nil {
 		return fmt.Errorf("create fetcher: %w", err)
 	}
@@ -124,7 +125,7 @@ func runCrawl(ctx context.Context, cmd *cli.Command) error {
 
 	// Run crawler.
 	log.Info().Str("url", seedURL).Msg("starting crawl")
-	c := crawler.NewCrawler(cfg, fetcher)
+	c := crawler.NewCrawler(cfg, fetcher, logger.FromContext(ctx))
 	result, err := c.Run(ctx, seedURL)
 	if err != nil {
 		return cli.Exit(fmt.Sprintf("crawl failed: %v", err), 2)
@@ -133,7 +134,7 @@ func runCrawl(ctx context.Context, cmd *cli.Command) error {
 
 	// Run audit checks.
 	log.Info().Msg("running audit checks")
-	registry := audit.DefaultRegistry()
+	registry := audit.DefaultRegistry(logger.FromContext(ctx))
 	result.Issues = registry.RunAll(ctx, result.Pages)
 	log.Info().Int("issues", len(result.Issues)).Msg("audit complete")
 
@@ -164,7 +165,7 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 		cfg.LighthouseMode = cmd.String("lighthouse-mode")
 	}
 	if cmd.IsSet("psi-key") {
-		cfg.PSIApiKey = cmd.String("psi-key")
+		cfg.PSIAPIKey = cmd.String("psi-key")
 	}
 	if cmd.IsSet("psi-strategy") {
 		cfg.PSIStrategy = cmd.String("psi-strategy")
@@ -188,14 +189,5 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 		cfg.UserAgent = cmd.String("user-agent")
 	}
 
-	// Apply global flags from parent command.
-	if cmd.IsSet("output") {
-		cfg.OutputFormat = cmd.String("output")
-	}
-	if cmd.IsSet("output-file") {
-		cfg.OutputFile = cmd.String("output-file")
-	}
-	if cmd.IsSet("fail-on") {
-		cfg.FailOn = cmd.String("fail-on")
-	}
+	cmdutil.ApplyGlobalOverrides(cmd, cfg)
 }

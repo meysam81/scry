@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 	"github.com/meysam81/scry/internal/report"
 )
@@ -17,13 +17,14 @@ import (
 // ReportAndExit writes reports to the configured outputs and returns an exit
 // code error if issues exceed the fail-on threshold.
 func ReportAndExit(ctx context.Context, cfg *config.Config, result *model.CrawlResult) error {
+	l := logger.FromContext(ctx)
 	reporters := report.AllReporters()
 	formats := cfg.OutputFormats()
 
 	for _, format := range formats {
 		r, ok := reporters[format]
 		if !ok {
-			log.Warn().Str("format", format).Msg("unknown output format, skipping")
+			l.Warn().Str("format", format).Msg("unknown output format, skipping")
 			continue
 		}
 
@@ -32,7 +33,7 @@ func ReportAndExit(ctx context.Context, cfg *config.Config, result *model.CrawlR
 		}
 	}
 
-	exitCode := DetermineExitCode(result, cfg.FailOn)
+	exitCode := DetermineExitCode(ctx, result, cfg.FailOn)
 	if exitCode != 0 {
 		return cli.Exit(fmt.Sprintf("issues found at or above %q severity threshold", cfg.FailOn), exitCode)
 	}
@@ -54,7 +55,7 @@ func writeReport(ctx context.Context, r report.Reporter, result *model.CrawlResu
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("create output directory %s: %w", dir, err)
 		}
-		f, err := os.Create(path)
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		if err != nil {
 			return fmt.Errorf("create output file %s: %w", path, err)
 		}
@@ -74,16 +75,22 @@ func writeReport(ctx context.Context, r report.Reporter, result *model.CrawlResu
 }
 
 // DetermineExitCode checks if any issues meet the fail-on threshold.
-func DetermineExitCode(result *model.CrawlResult, failOn string) int {
+// An unrecognised failOn value is logged as a warning and treated as no threshold (exit 0).
+func DetermineExitCode(ctx context.Context, result *model.CrawlResult, failOn string) int {
 	if failOn == "" {
 		return 0
 	}
 
-	threshold := model.SeverityFromString(failOn)
-	if threshold == "" && failOn == "any" {
+	if failOn == "any" {
 		if len(result.Issues) > 0 {
 			return 1
 		}
+		return 0
+	}
+
+	threshold := model.SeverityFromString(failOn)
+	if threshold == "" {
+		logger.FromContext(ctx).Warn().Str("fail_on", failOn).Msg("unknown fail-on value, ignoring")
 		return 0
 	}
 

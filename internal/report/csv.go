@@ -19,8 +19,10 @@ func (r *CSVReporter) Name() string { return "csv" }
 // The header row is: url,severity,check,message,detail.
 // Issues are written in their existing order (assumed pre-sorted by severity).
 func (r *CSVReporter) Write(_ context.Context, result *model.CrawlResult, w io.Writer) error {
+	if result == nil {
+		return nil
+	}
 	cw := csv.NewWriter(w)
-	defer cw.Flush()
 
 	header := []string{"url", "severity", "check", "message", "detail"}
 	if err := cw.Write(header); err != nil {

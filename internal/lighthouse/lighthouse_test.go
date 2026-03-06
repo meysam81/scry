@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -167,11 +168,11 @@ func TestScoreToIssues(t *testing.T) {
 func TestNewRunner_PSI(t *testing.T) {
 	cfg := &config.Config{
 		LighthouseMode: "psi",
-		PSIApiKey:      "test-key",
+		PSIAPIKey:      "test-key",
 		PSIStrategy:    "mobile",
 	}
 
-	runner, err := NewRunner(cfg)
+	runner, err := NewRunner(cfg, logger.Nop())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -192,7 +193,7 @@ func TestNewRunner_Browserless(t *testing.T) {
 		BrowserlessURL: "http://localhost:3000",
 	}
 
-	runner, err := NewRunner(cfg)
+	runner, err := NewRunner(cfg, logger.Nop())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -212,7 +213,7 @@ func TestNewRunner_UnknownMode(t *testing.T) {
 		LighthouseMode: "unknown",
 	}
 
-	runner, err := NewRunner(cfg)
+	runner, err := NewRunner(cfg, logger.Nop())
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}

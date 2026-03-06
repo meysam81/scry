@@ -15,6 +15,7 @@ import (
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	lh "github.com/meysam81/scry/internal/lighthouse"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -67,7 +68,7 @@ func runLighthouse(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Create the runner.
-	runner, err := lh.NewRunner(cfg)
+	runner, err := lh.NewRunner(cfg, logger.FromContext(ctx))
 	if err != nil {
 		return fmt.Errorf("create lighthouse runner: %w", err)
 	}
@@ -135,6 +136,9 @@ func collectURLs(cmd *cli.Command) ([]string, error) {
 	return urls, nil
 }
 
+// maxURLFileLines is the maximum number of lines allowed in a URL file.
+const maxURLFileLines = 10_000
+
 // readURLsFile reads a file of URLs, one per line, skipping empty lines and comments.
 func readURLsFile(path string) (_ []string, readErr error) {
 	f, err := os.Open(path)
@@ -148,8 +152,13 @@ func readURLsFile(path string) (_ []string, readErr error) {
 	}()
 
 	var urls []string
+	lineCount := 0
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
+		lineCount++
+		if lineCount > maxURLFileLines {
+			return nil, fmt.Errorf("urls file %s exceeds %d lines", path, maxURLFileLines)
+		}
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -165,20 +174,12 @@ func readURLsFile(path string) (_ []string, readErr error) {
 
 // applyFlagOverrides applies CLI flag values to the config.
 func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
-	if cmd.IsSet("output") {
-		cfg.OutputFormat = cmd.String("output")
-	}
-	if cmd.IsSet("output-file") {
-		cfg.OutputFile = cmd.String("output-file")
-	}
-	if cmd.IsSet("fail-on") {
-		cfg.FailOn = cmd.String("fail-on")
-	}
+	cmdutil.ApplyGlobalOverrides(cmd, cfg)
 	if cmd.IsSet("mode") {
 		cfg.LighthouseMode = cmd.String("mode")
 	}
 	if cmd.IsSet("psi-key") {
-		cfg.PSIApiKey = cmd.String("psi-key")
+		cfg.PSIAPIKey = cmd.String("psi-key")
 	}
 	if cmd.IsSet("strategy") {
 		cfg.PSIStrategy = cmd.String("strategy")

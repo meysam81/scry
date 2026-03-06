@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/meysam81/scry/internal/logger"
 )
 
 func TestBrowserlessClient_Run_Success(t *testing.T) {
@@ -48,7 +50,7 @@ func TestBrowserlessClient_Run_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewBrowserlessClient(server.URL)
+	client := NewBrowserlessClient(server.URL, logger.Nop())
 	result, err := client.Run(context.Background(), "https://example.com")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -84,7 +86,7 @@ func TestBrowserlessClient_Run_ErrorResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewBrowserlessClient(server.URL)
+	client := NewBrowserlessClient(server.URL, logger.Nop())
 	_, err := client.Run(context.Background(), "https://example.com")
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -93,7 +95,7 @@ func TestBrowserlessClient_Run_ErrorResponse(t *testing.T) {
 
 func TestBrowserlessClient_Run_ConnectionFailure(t *testing.T) {
 	// Use invalid URL to trigger connection failure.
-	client := NewBrowserlessClient("http://invalid.localhost:99999")
+	client := NewBrowserlessClient("http://invalid.localhost:99999", logger.Nop())
 	_, err := client.Run(context.Background(), "https://example.com")
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -108,7 +110,7 @@ func TestBrowserlessClient_Run_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewBrowserlessClient(server.URL)
+	client := NewBrowserlessClient(server.URL, logger.Nop())
 	_, err := client.Run(context.Background(), "https://example.com")
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -127,7 +129,7 @@ func TestBrowserlessClient_Run_NilScores(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewBrowserlessClient(server.URL)
+	client := NewBrowserlessClient(server.URL, logger.Nop())
 	result, err := client.Run(context.Background(), "https://example.com")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

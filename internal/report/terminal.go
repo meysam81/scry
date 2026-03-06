@@ -21,6 +21,9 @@ func (r *TerminalReporter) Name() string { return "terminal" }
 
 // Write formats result as a colourful terminal report and writes it to w.
 func (r *TerminalReporter) Write(_ context.Context, result *model.CrawlResult, w io.Writer) error {
+	if result == nil {
+		return nil
+	}
 	noColor := os.Getenv("NO_COLOR") != ""
 
 	// Define styles — disabled when NO_COLOR is set.

@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -37,7 +38,7 @@ func (m *mockSiteChecker) CheckSite(_ context.Context, _ []*model.Page) []model.
 }
 
 func TestNewRegistry(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(logger.Nop())
 	if r == nil {
 		t.Fatal("expected non-nil registry")
 	}
@@ -47,7 +48,7 @@ func TestNewRegistry(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(logger.Nop())
 	r.Register(&mockChecker{name: "test"})
 	if len(r.checkers) != 1 {
 		t.Fatalf("expected 1 checker, got %d", len(r.checkers))
@@ -55,14 +56,14 @@ func TestRegister(t *testing.T) {
 }
 
 func TestDefaultRegistry(t *testing.T) {
-	r := DefaultRegistry()
+	r := DefaultRegistry(logger.Nop())
 	if len(r.checkers) != 6 {
 		t.Fatalf("expected 6 checkers, got %d", len(r.checkers))
 	}
 }
 
 func TestRunAll_MultipleCheckersAndPages(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(logger.Nop())
 
 	c1 := &mockChecker{
 		name: "c1",
@@ -106,7 +107,7 @@ func TestRunAll_MultipleCheckersAndPages(t *testing.T) {
 }
 
 func TestRunAll_SiteChecker(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(logger.Nop())
 
 	sc := &mockSiteChecker{
 		mockChecker: mockChecker{name: "site"},
@@ -130,13 +131,13 @@ func TestRunAll_SiteChecker(t *testing.T) {
 }
 
 func TestRunAll_Sorting(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(logger.Nop())
 
 	c := &mockChecker{name: "mixed"}
 	r.Register(c)
 
 	// We'll manually test sorting by creating a registry that returns known issues.
-	r2 := NewRegistry()
+	r2 := NewRegistry(logger.Nop())
 	infoChecker := &mockChecker{
 		name: "info",
 		issues: []model.Issue{
@@ -181,7 +182,7 @@ func TestRunAll_Sorting(t *testing.T) {
 }
 
 func TestRunAll_EmptyPages(t *testing.T) {
-	r := DefaultRegistry()
+	r := DefaultRegistry(logger.Nop())
 	issues := r.RunAll(context.Background(), nil)
 	if len(issues) != 0 {
 		t.Fatalf("expected 0 issues for nil pages, got %d", len(issues))

@@ -5,29 +5,32 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
 // defaultContentType is the content type returned for all browser-fetched pages.
 const defaultContentType = "text/html"
 
-// BrowserFetcher implements crawler.Fetcher using a headless browser via rod.
-type BrowserFetcher struct {
+// Fetcher implements crawler.Fetcher using a headless browser via rod.
+type Fetcher struct {
 	browser   *rod.Browser
 	timeout   time.Duration
 	userAgent string
+	log       logger.Logger
 }
 
-// NewBrowserFetcher creates a new BrowserFetcher connected to a headless browser.
+// NewFetcher creates a new Fetcher connected to a headless browser.
 // If browserlessURL is non-empty, it connects to a remote browser instance;
 // otherwise it launches a local headless browser.
-func NewBrowserFetcher(browserlessURL, userAgent string, timeout time.Duration) (*BrowserFetcher, error) {
+func NewFetcher(browserlessURL, userAgent string, timeout time.Duration, l logger.Logger) (*Fetcher, error) {
 	var b *rod.Browser
 	var err error
 
@@ -46,23 +49,28 @@ func NewBrowserFetcher(browserlessURL, userAgent string, timeout time.Duration) 
 		return nil, fmt.Errorf("browser: connect: %w", err)
 	}
 
-	return &BrowserFetcher{
+	return &Fetcher{
 		browser:   b,
 		timeout:   timeout,
 		userAgent: userAgent,
+		log:       l,
 	}, nil
 }
 
 // Fetch navigates to the given URL in a new browser tab, waits for stability,
 // and returns the rendered page content.
-func (f *BrowserFetcher) Fetch(ctx context.Context, u string) (*model.Page, error) {
+func (f *Fetcher) Fetch(ctx context.Context, u string) (*model.Page, error) {
 	start := time.Now()
 
 	page, err := f.browser.Page(proto.TargetCreateTarget{URL: "about:blank"})
 	if err != nil {
 		return nil, fmt.Errorf("browser fetch %s: create page: %w", u, err)
 	}
-	defer func() { _ = page.Close() }()
+	defer func() {
+		if err := page.Close(); err != nil {
+			f.log.Warn().Err(err).Str("url", u).Msg("browser page close failed")
+		}
+	}()
 
 	// Apply timeout to the page context.
 	page = page.Context(ctx).Timeout(f.timeout)
@@ -78,8 +86,11 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, u string) (*model.Page, erro
 	}
 
 	// Enable network events to capture response status code.
-	var statusCode int
-	var responseHeaders http.Header
+	var (
+		mu              sync.Mutex
+		statusCode      int
+		responseHeaders http.Header
+	)
 
 	err = proto.NetworkEnable{}.Call(page)
 	if err != nil {
@@ -91,11 +102,13 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, u string) (*model.Page, erro
 	go page.EachEvent(func(e *proto.NetworkResponseReceived) {
 		// Capture the status from the main document response (type Document).
 		if e.Type == proto.NetworkResourceTypeDocument {
+			mu.Lock()
 			statusCode = e.Response.Status
 			responseHeaders = make(http.Header)
 			for k, v := range e.Response.Headers {
 				responseHeaders.Set(k, fmt.Sprint(v))
 			}
+			mu.Unlock()
 			select {
 			case done <- struct{}{}:
 			default:
@@ -139,12 +152,17 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, u string) (*model.Page, erro
 
 	duration := time.Since(start)
 
+	mu.Lock()
+	sc := statusCode
+	rh := responseHeaders
+	mu.Unlock()
+
 	result := &model.Page{
 		URL:           finalURL,
-		StatusCode:    statusCode,
+		StatusCode:    sc,
 		ContentType:   defaultContentType,
 		Body:          []byte(html),
-		Headers:       responseHeaders,
+		Headers:       rh,
 		FetchedAt:     start,
 		FetchDuration: duration,
 	}
@@ -153,7 +171,7 @@ func (f *BrowserFetcher) Fetch(ctx context.Context, u string) (*model.Page, erro
 }
 
 // Close shuts down the browser instance and releases resources.
-func (f *BrowserFetcher) Close() error {
+func (f *Fetcher) Close() error {
 	if f.browser != nil {
 		return f.browser.Close()
 	}

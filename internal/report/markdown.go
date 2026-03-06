@@ -75,6 +75,9 @@ func (r *MarkdownReporter) Name() string { return "markdown" }
 
 // Write renders result as Markdown and writes it to w.
 func (r *MarkdownReporter) Write(_ context.Context, result *model.CrawlResult, w io.Writer) error {
+	if result == nil {
+		return nil
+	}
 	data := buildMdData(result)
 
 	if err := mdTmpl.Execute(w, data); err != nil {

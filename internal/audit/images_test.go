@@ -102,6 +102,7 @@ func TestImageChecker_BrokenSrc(t *testing.T) {
 	defer ts.Close()
 
 	checker := NewImageChecker()
+	checker.allowPrivate = true
 	checker.SetHTTPClient(ts.Client())
 
 	page := htmlPage(fmt.Sprintf(`<html><body><img src="%s/broken.jpg" alt="broken"></body></html>`, ts.URL))
@@ -129,6 +130,7 @@ func TestImageChecker_LargeImage(t *testing.T) {
 	defer ts.Close()
 
 	checker := NewImageChecker()
+	checker.allowPrivate = true
 	checker.SetHTTPClient(ts.Client())
 
 	page := htmlPage(fmt.Sprintf(`<html><body><img src="%s/big.jpg" alt="big"></body></html>`, ts.URL))
@@ -156,6 +158,7 @@ func TestImageChecker_SmallImage_NoIssue(t *testing.T) {
 	defer ts.Close()
 
 	checker := NewImageChecker()
+	checker.allowPrivate = true
 	checker.SetHTTPClient(ts.Client())
 
 	page := htmlPage(fmt.Sprintf(`<html><body><img src="%s/small.jpg" alt="small"></body></html>`, ts.URL))

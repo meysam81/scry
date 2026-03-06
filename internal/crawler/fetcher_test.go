@@ -1,6 +1,8 @@
 package crawler
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"net/http"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 func TestHTTPFetcher_BasicFetch(t *testing.T) {
@@ -19,7 +22,7 @@ func TestHTTPFetcher_BasicFetch(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second)
+	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second, logger.Nop())
 	page, err := f.Fetch(context.Background(), srv.URL+"/page")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -56,7 +59,8 @@ func TestHTTPFetcher_RedirectChain(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second)
+	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second, logger.Nop())
+	f.allowPrivate = true
 	page, err := f.Fetch(context.Background(), srv.URL+"/a")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -84,7 +88,8 @@ func TestHTTPFetcher_RedirectLoop(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second)
+	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second, logger.Nop())
+	f.allowPrivate = true
 	_, err := f.Fetch(context.Background(), srv.URL+"/a")
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -101,7 +106,7 @@ func TestHTTPFetcher_ContextCancellation(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	f := NewHTTPFetcher("test-agent/1.0", 10*time.Second)
+	f := NewHTTPFetcher("test-agent/1.0", 10*time.Second, logger.Nop())
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
@@ -119,13 +124,41 @@ func TestHTTPFetcher_UserAgent(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	f := NewHTTPFetcher("my-custom-agent/2.0", 5*time.Second)
+	f := NewHTTPFetcher("my-custom-agent/2.0", 5*time.Second, logger.Nop())
 	_, err := f.Fetch(context.Background(), srv.URL+"/")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if receivedUA != "my-custom-agent/2.0" {
 		t.Errorf("user agent = %q, want %q", receivedUA, "my-custom-agent/2.0")
+	}
+}
+
+func TestHTTPFetcher_GzipDecompression(t *testing.T) {
+	const want = "<html><body>compressed</body></html>"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Accept-Encoding") != "gzip" {
+			t.Error("expected Accept-Encoding: gzip header")
+		}
+		var buf bytes.Buffer
+		gz := gzip.NewWriter(&buf)
+		_, _ = gz.Write([]byte(want))
+		_ = gz.Close() // writing to in-memory buffer; never fails
+
+		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(buf.Bytes())
+	}))
+	defer srv.Close()
+
+	f := NewHTTPFetcher("test-agent/1.0", 5*time.Second, logger.Nop())
+	page, err := f.Fetch(context.Background(), srv.URL+"/gzip")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(page.Body) != want {
+		t.Errorf("body = %q, want %q", string(page.Body), want)
 	}
 }
 
@@ -136,7 +169,7 @@ func TestNewFetcher_HTTPMode(t *testing.T) {
 		RequestTimeout: 5 * time.Second,
 	}
 
-	fetcher, closer, err := NewFetcher(cfg)
+	fetcher, closer, err := NewFetcher(cfg, logger.Nop())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -178,7 +211,7 @@ func TestNewFetcher_BrowserModeFailsWithoutBrowser(t *testing.T) {
 		RequestTimeout: 5 * time.Second,
 	}
 
-	_, _, err := NewFetcher(cfg)
+	_, _, err := NewFetcher(cfg, logger.Nop())
 	if err == nil {
 		t.Fatal("expected error when connecting to invalid browserless URL")
 	}

@@ -37,8 +37,8 @@ func (c *PerformanceChecker) Check(_ context.Context, page *model.Page) []model.
 
 	issues = append(issues, c.checkCompression(page)...)
 
-	doc, err := parseHTMLDoc(page.Body)
-	if err != nil {
+	doc := parseHTMLDocLog(page.Body, page.URL)
+	if doc == nil {
 		return issues
 	}
 

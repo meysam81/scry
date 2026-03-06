@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -25,11 +26,12 @@ type SiteChecker interface {
 // Registry holds all registered checkers and runs them.
 type Registry struct {
 	checkers []Checker
+	log      logger.Logger
 }
 
 // NewRegistry returns an empty Registry.
-func NewRegistry() *Registry {
-	return &Registry{}
+func NewRegistry(l logger.Logger) *Registry {
+	return &Registry{log: l}
 }
 
 // Register adds a checker to the registry.
@@ -38,8 +40,8 @@ func (r *Registry) Register(c Checker) {
 }
 
 // DefaultRegistry creates a Registry with all built-in checkers registered.
-func DefaultRegistry() *Registry {
-	r := NewRegistry()
+func DefaultRegistry(l logger.Logger) *Registry {
+	r := NewRegistry(l)
 	r.Register(NewSEOChecker())
 	r.Register(NewHealthChecker())
 	r.Register(NewImageChecker())
@@ -56,6 +58,8 @@ func DefaultRegistry() *Registry {
 // CheckSite method is called. Results are sorted by severity (critical first),
 // then URL, then CheckName.
 func (r *Registry) RunAll(ctx context.Context, pages []*model.Page) []model.Issue {
+	auditLogger = r.log
+
 	var (
 		mu     sync.Mutex
 		issues []model.Issue

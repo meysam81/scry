@@ -5,9 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
+	"golang.org/x/time/rate"
+
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -52,20 +57,28 @@ type browserlessCategory struct {
 type BrowserlessClient struct {
 	endpoint string
 	client   *http.Client
+	limiter  *rate.Limiter
+	log      logger.Logger
 }
 
 // NewBrowserlessClient creates a new browserless client.
-func NewBrowserlessClient(browserlessURL string) *BrowserlessClient {
+func NewBrowserlessClient(browserlessURL string, l logger.Logger) *BrowserlessClient {
 	return &BrowserlessClient{
-		endpoint: browserlessURL + "/lighthouse",
+		endpoint: strings.TrimRight(browserlessURL, "/") + "/lighthouse",
 		client: &http.Client{
 			Timeout: browserlessTimeout,
 		},
+		limiter: rate.NewLimiter(rate.Limit(5), 1),
+		log:     l,
 	}
 }
 
 // Run executes a Lighthouse audit via browserless and returns the result.
 func (c *BrowserlessClient) Run(ctx context.Context, targetURL string) (*model.LighthouseResult, error) {
+	if err := c.limiter.Wait(ctx); err != nil {
+		return nil, fmt.Errorf("browserless rate limiter: %w", err)
+	}
+
 	reqBody := browserlessRequest{
 		URL: targetURL,
 		Config: browserlessConfig{
@@ -90,10 +103,15 @@ func (c *BrowserlessClient) Run(ctx context.Context, targetURL string) (*model.L
 	if err != nil {
 		return nil, fmt.Errorf("browserless request failed: %w", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.log.Warn().Err(err).Str("url", targetURL).Msg("browserless resp body close failed")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("browserless api returned status %d", resp.StatusCode)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		return nil, fmt.Errorf("browserless api returned status %d: %s", resp.StatusCode, body)
 	}
 
 	var browserlessResp browserlessResponse

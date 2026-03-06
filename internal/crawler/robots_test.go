@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/meysam81/scry/internal/logger"
 )
 
 func TestRobotsChecker_DisallowBlocks(t *testing.T) {
@@ -18,7 +20,7 @@ func TestRobotsChecker_DisallowBlocks(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	rc := NewRobotsChecker("scry")
+	rc := NewRobotsChecker("scry", logger.Nop())
 
 	if rc.IsAllowed(context.Background(), srv.URL+"/admin") {
 		t.Error("/admin should be disallowed")
@@ -44,7 +46,7 @@ func TestRobotsChecker_AllowOverridesDisallow(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	rc := NewRobotsChecker("scry")
+	rc := NewRobotsChecker("scry", logger.Nop())
 
 	if rc.IsAllowed(context.Background(), srv.URL+"/docs/secret") {
 		t.Error("/docs/secret should be disallowed")
@@ -67,10 +69,50 @@ func TestRobotsChecker_MissingRobotsTxt(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	rc := NewRobotsChecker("scry")
+	rc := NewRobotsChecker("scry", logger.Nop())
 
 	if !rc.IsAllowed(context.Background(), srv.URL+"/anything") {
 		t.Error("missing robots.txt should allow all URLs")
+	}
+}
+
+func TestRobotsChecker_MultiUAGroupMatchFirst(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = fmt.Fprint(w, "User-agent: scry\nUser-agent: googlebot\nDisallow: /shared-blocked\n")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	rc := NewRobotsChecker("scry/1.0", logger.Nop())
+
+	if rc.IsAllowed(context.Background(), srv.URL+"/shared-blocked") {
+		t.Error("/shared-blocked should be disallowed for scry in multi-UA group (match first)")
+	}
+	if !rc.IsAllowed(context.Background(), srv.URL+"/other") {
+		t.Error("/other should be allowed")
+	}
+}
+
+func TestRobotsChecker_MultiUAGroupMatchLast(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = fmt.Fprint(w, "User-agent: googlebot\nUser-agent: scry\nDisallow: /shared-blocked\n")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	rc := NewRobotsChecker("scry/1.0", logger.Nop())
+
+	if rc.IsAllowed(context.Background(), srv.URL+"/shared-blocked") {
+		t.Error("/shared-blocked should be disallowed for scry in multi-UA group (match last)")
+	}
+	if !rc.IsAllowed(context.Background(), srv.URL+"/other") {
+		t.Error("/other should be allowed")
 	}
 }
 
@@ -84,7 +126,7 @@ func TestRobotsChecker_SpecificUserAgent(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	rc := NewRobotsChecker("scry")
+	rc := NewRobotsChecker("scry", logger.Nop())
 
 	if rc.IsAllowed(context.Background(), srv.URL+"/scry-blocked") {
 		t.Error("/scry-blocked should be disallowed for scry agent")

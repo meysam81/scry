@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/internal/safenet"
 	"golang.org/x/net/html"
 )
 
@@ -15,7 +16,8 @@ const maxImageSize = 500 * 1024
 
 // ImageChecker analyses pages for image-related issues.
 type ImageChecker struct {
-	client *http.Client
+	client       *http.Client
+	allowPrivate bool // skip SSRF checks (for testing only)
 }
 
 // NewImageChecker returns a new ImageChecker with a timeout-limited HTTP client.
@@ -36,8 +38,8 @@ func (c *ImageChecker) Check(ctx context.Context, page *model.Page) []model.Issu
 	if !isHTMLContent(page) {
 		return nil
 	}
-	doc, err := parseHTMLDoc(page.Body)
-	if err != nil {
+	doc := parseHTMLDocLog(page.Body, page.URL)
+	if doc == nil {
 		return nil
 	}
 
@@ -80,6 +82,10 @@ func (c *ImageChecker) checkAlt(img *html.Node, pageURL string) []model.Issue {
 func (c *ImageChecker) checkRemoteImage(ctx context.Context, img *html.Node, pageURL string) []model.Issue {
 	src, _ := getAttr(img, "src")
 	if !strings.HasPrefix(src, "http://") && !strings.HasPrefix(src, "https://") {
+		return nil
+	}
+
+	if !c.allowPrivate && !safenet.IsSafeURL(src) {
 		return nil
 	}
 

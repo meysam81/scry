@@ -10,6 +10,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// envSet reports whether the given environment variable is explicitly set.
+func envSet(name string) bool {
+	_, ok := os.LookupEnv(name)
+	return ok
+}
+
 // YAMLConfig represents the configuration file structure.
 // Pointer fields distinguish unset from zero values.
 type YAMLConfig struct {
@@ -91,28 +97,29 @@ func findConfigFile(explicitPath string) string {
 }
 
 // mergeYAML applies YAML configuration values to Config only when the YAML
-// field is non-nil. This preserves the precedence: CLI > env > YAML > defaults.
+// field is non-nil AND the corresponding env var is not explicitly set.
+// This preserves the precedence: CLI > env > YAML > defaults.
 func mergeYAML(cfg *Config, ycfg *YAMLConfig) error {
 	// Crawl settings.
-	if ycfg.Crawl.MaxDepth != nil {
+	if ycfg.Crawl.MaxDepth != nil && !envSet("SCRY_MAX_DEPTH") {
 		cfg.MaxDepth = *ycfg.Crawl.MaxDepth
 	}
-	if ycfg.Crawl.MaxPages != nil {
+	if ycfg.Crawl.MaxPages != nil && !envSet("SCRY_MAX_PAGES") {
 		cfg.MaxPages = *ycfg.Crawl.MaxPages
 	}
-	if ycfg.Crawl.Concurrency != nil {
+	if ycfg.Crawl.Concurrency != nil && !envSet("SCRY_CONCURRENCY") {
 		cfg.Concurrency = *ycfg.Crawl.Concurrency
 	}
-	if ycfg.Crawl.RespectRobots != nil {
+	if ycfg.Crawl.RespectRobots != nil && !envSet("SCRY_RESPECT_ROBOTS") {
 		cfg.RespectRobots = *ycfg.Crawl.RespectRobots
 	}
-	if ycfg.Crawl.RateLimit != nil {
+	if ycfg.Crawl.RateLimit != nil && !envSet("SCRY_RATE_LIMIT") {
 		cfg.RateLimit = *ycfg.Crawl.RateLimit
 	}
-	if ycfg.Crawl.UserAgent != nil {
+	if ycfg.Crawl.UserAgent != nil && !envSet("SCRY_USER_AGENT") {
 		cfg.UserAgent = *ycfg.Crawl.UserAgent
 	}
-	if ycfg.Crawl.Timeout != nil {
+	if ycfg.Crawl.Timeout != nil && !envSet("SCRY_REQUEST_TIMEOUT") {
 		d, err := time.ParseDuration(*ycfg.Crawl.Timeout)
 		if err != nil {
 			return fmt.Errorf("parse crawl timeout %q: %w", *ycfg.Crawl.Timeout, err)
@@ -127,32 +134,32 @@ func mergeYAML(cfg *Config, ycfg *YAMLConfig) error {
 	}
 
 	// Output settings.
-	if len(ycfg.Output.Formats) > 0 {
+	if len(ycfg.Output.Formats) > 0 && !envSet("SCRY_OUTPUT") {
 		cfg.OutputFormat = strings.Join(ycfg.Output.Formats, ",")
 	}
-	if ycfg.Output.File != nil {
+	if ycfg.Output.File != nil && !envSet("SCRY_OUTPUT_FILE") {
 		cfg.OutputFile = *ycfg.Output.File
 	}
-	if ycfg.Output.FailOn != nil {
+	if ycfg.Output.FailOn != nil && !envSet("SCRY_FAIL_ON") {
 		cfg.FailOn = *ycfg.Output.FailOn
 	}
 
 	// Lighthouse settings.
-	if ycfg.Lighthouse.Enabled != nil {
+	if ycfg.Lighthouse.Enabled != nil && !envSet("SCRY_LIGHTHOUSE") {
 		cfg.LighthouseEnabled = *ycfg.Lighthouse.Enabled
 	}
-	if ycfg.Lighthouse.Mode != nil {
+	if ycfg.Lighthouse.Mode != nil && !envSet("SCRY_LIGHTHOUSE_MODE") {
 		cfg.LighthouseMode = *ycfg.Lighthouse.Mode
 	}
-	if ycfg.Lighthouse.Strategy != nil {
+	if ycfg.Lighthouse.Strategy != nil && !envSet("SCRY_PSI_STRATEGY") {
 		cfg.PSIStrategy = *ycfg.Lighthouse.Strategy
 	}
 
 	// Browser settings.
-	if ycfg.Browser.Enabled != nil {
+	if ycfg.Browser.Enabled != nil && !envSet("SCRY_BROWSER_MODE") {
 		cfg.BrowserMode = *ycfg.Browser.Enabled
 	}
-	if ycfg.Browser.BrowserlessURL != nil {
+	if ycfg.Browser.BrowserlessURL != nil && !envSet("SCRY_BROWSERLESS_URL") {
 		cfg.BrowserlessURL = *ycfg.Browser.BrowserlessURL
 	}
 

@@ -3,8 +3,10 @@ package crawler
 import (
 	"context"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 // maxSitemapDepth is the maximum recursion depth for sitemap index resolution.
@@ -33,12 +35,19 @@ type sitemap struct {
 }
 
 // ParseSitemap fetches and parses a sitemap.xml, returning discovered URLs.
+// TODO: Support gzip-compressed sitemaps.
 func ParseSitemap(ctx context.Context, sitemapURL string) []string {
-	return parseSitemapRecursive(ctx, sitemapURL, 0)
+	parsed, err := url.Parse(sitemapURL)
+	if err != nil {
+		return nil
+	}
+	return parseSitemapRecursive(ctx, sitemapURL, parsed.Hostname(), 0)
 }
 
-// parseSitemapRecursive fetches and parses a sitemap, following sitemap indexes up to maxSitemapDepth.
-func parseSitemapRecursive(ctx context.Context, sitemapURL string, depth int) []string {
+// parseSitemapRecursive fetches and parses a sitemap, following sitemap indexes
+// up to maxSitemapDepth. Child sitemaps on different hosts are rejected to
+// prevent SSRF via sitemap index entries.
+func parseSitemapRecursive(ctx context.Context, sitemapURL, allowedHost string, depth int) []string {
 	if depth > maxSitemapDepth {
 		return nil
 	}
@@ -65,9 +74,15 @@ func parseSitemapRecursive(ctx context.Context, sitemapURL string, depth int) []
 	if err := xml.Unmarshal(body, &si); err == nil && len(si.Sitemaps) > 0 {
 		var urls []string
 		for _, s := range si.Sitemaps {
-			if s.Loc != "" {
-				urls = append(urls, parseSitemapRecursive(ctx, s.Loc, depth+1)...)
+			if s.Loc == "" {
+				continue
 			}
+			// Reject child sitemaps on different hosts.
+			childParsed, err := url.Parse(s.Loc)
+			if err != nil || childParsed.Hostname() != allowedHost {
+				continue
+			}
+			urls = append(urls, parseSitemapRecursive(ctx, s.Loc, allowedHost, depth+1)...)
 		}
 		return urls
 	}
@@ -82,14 +97,14 @@ func fetchSitemapBody(ctx context.Context, sitemapURL string) ([]byte, error) {
 		return nil, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := internalClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, err
+		return nil, fmt.Errorf("sitemap %s: status %d", sitemapURL, resp.StatusCode)
 	}
 
 	return io.ReadAll(io.LimitReader(resp.Body, maxBodySize))

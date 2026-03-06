@@ -26,8 +26,8 @@ func (c *StructuredDataChecker) Check(_ context.Context, page *model.Page) []mod
 	if !isHTMLContent(page) {
 		return nil
 	}
-	doc, err := parseHTMLDoc(page.Body)
-	if err != nil {
+	doc := parseHTMLDocLog(page.Body, page.URL)
+	if doc == nil {
 		return nil
 	}
 

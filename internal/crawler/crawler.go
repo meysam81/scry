@@ -12,6 +12,7 @@ import (
 	"golang.org/x/time/rate"
 
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -19,13 +20,15 @@ import (
 type Crawler struct {
 	cfg     *config.Config
 	fetcher Fetcher
+	log     logger.Logger
 }
 
 // NewCrawler creates a new Crawler with the given configuration and fetcher.
-func NewCrawler(cfg *config.Config, fetcher Fetcher) *Crawler {
+func NewCrawler(cfg *config.Config, fetcher Fetcher, l logger.Logger) *Crawler {
 	return &Crawler{
 		cfg:     cfg,
 		fetcher: fetcher,
+		log:     l,
 	}
 }
 
@@ -47,12 +50,17 @@ func (c *Crawler) Run(ctx context.Context, seedURL string) (*model.CrawlResult, 
 	// Set up robots checker if enabled.
 	var robots *RobotsChecker
 	if c.cfg.RespectRobots {
-		robots = NewRobotsChecker(c.cfg.UserAgent)
+		robots = NewRobotsChecker(c.cfg.UserAgent, c.log)
 	}
 
 	// Seed the frontier from sitemap.
 	sitemapURL := strings.TrimRight(seedURL, "/") + "/sitemap.xml"
 	sitemapURLs := ParseSitemap(ctx, sitemapURL)
+
+	// Truncate sitemap URLs to MaxPages to bound memory usage.
+	if c.cfg.MaxPages > 0 && len(sitemapURLs) > c.cfg.MaxPages {
+		sitemapURLs = sitemapURLs[:c.cfg.MaxPages]
+	}
 
 	// Track sitemap URLs to mark pages later.
 	sitemapSet := make(map[string]bool, len(sitemapURLs))
@@ -65,7 +73,8 @@ func (c *Crawler) Run(ctx context.Context, seedURL string) (*model.CrawlResult, 
 	frontier.Add(seedURL, 0)
 
 	// Rate limiter.
-	limiter := rate.NewLimiter(rate.Limit(c.cfg.RateLimit), c.cfg.RateLimit)
+	burst := min(c.cfg.RateLimit, 5)
+	limiter := rate.NewLimiter(rate.Limit(c.cfg.RateLimit), burst)
 
 	// Results collection.
 	var (
@@ -95,6 +104,7 @@ func (c *Crawler) Run(ctx context.Context, seedURL string) (*model.CrawlResult, 
 
 				page, err := c.fetcher.Fetch(ctx, task.URL)
 				if err != nil {
+					c.log.Warn().Err(err).Str("url", task.URL).Msg("fetch failed")
 					atomic.AddInt64(&active, -1)
 					continue
 				}

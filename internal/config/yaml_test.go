@@ -61,22 +61,38 @@ crawl:
 		t.Fatalf("write yaml: %v", err)
 	}
 
-	// LoadWithFile calls Load() first (picks up env), then merges YAML.
-	// Since YAML blindly overwrites non-nil fields, the env value gets overwritten
-	// by YAML here. The real precedence (CLI > env > YAML) is enforced at the
-	// CLI layer, which re-applies CLI/env overrides after LoadWithFile.
-	// However, the task spec says "env should win" because Load() parses env first,
-	// and mergeYAML only sets non-nil YAML fields. In this design, YAML values
-	// do override env when present. The test documents actual behavior.
 	cfg, err := LoadWithFile(path)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// YAML sets max_depth=3, which overrides the env value of 20.
-	// The CLI layer is responsible for re-applying env/CLI overrides on top.
+	// Env var SCRY_MAX_DEPTH=20 takes precedence over YAML max_depth=3.
+	if cfg.MaxDepth != 20 {
+		t.Errorf("MaxDepth = %d, want 20 (env wins over YAML)", cfg.MaxDepth)
+	}
+}
+
+func TestMergePrecedenceYAMLOverridesDefault(t *testing.T) {
+	clearScryEnv(t)
+
+	dir := t.TempDir()
+	yamlContent := `
+crawl:
+  max_depth: 3
+`
+	path := filepath.Join(dir, "scry.yml")
+	if err := os.WriteFile(path, []byte(yamlContent), 0o644); err != nil {
+		t.Fatalf("write yaml: %v", err)
+	}
+
+	cfg, err := LoadWithFile(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// No env var set, so YAML max_depth=3 overrides the default of 5.
 	if cfg.MaxDepth != 3 {
-		t.Errorf("MaxDepth = %d, want 3 (YAML overrides env at this layer)", cfg.MaxDepth)
+		t.Errorf("MaxDepth = %d, want 3 (YAML overrides default)", cfg.MaxDepth)
 	}
 }
 

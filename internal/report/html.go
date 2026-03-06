@@ -46,6 +46,9 @@ func (r *HTMLReporter) Name() string { return "html" }
 
 // Write renders result as an HTML report and writes it to w.
 func (r *HTMLReporter) Write(_ context.Context, result *model.CrawlResult, w io.Writer) error {
+	if result == nil {
+		return nil
+	}
 	data := buildHTMLData(result)
 
 	if err := htmlTmpl.Execute(w, data); err != nil {

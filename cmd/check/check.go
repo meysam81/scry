@@ -13,6 +13,7 @@ import (
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/crawler"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -82,7 +83,7 @@ func runCheck(ctx context.Context, cmd *cli.Command) error {
 	targetURL = cmdutil.NormalizeURL(targetURL)
 
 	// Create fetcher.
-	fetcher, cleanup, err := crawler.NewFetcher(cfg)
+	fetcher, cleanup, err := crawler.NewFetcher(cfg, logger.FromContext(ctx))
 	if err != nil {
 		return fmt.Errorf("create fetcher: %w", err)
 	}
@@ -100,7 +101,7 @@ func runCheck(ctx context.Context, cmd *cli.Command) error {
 
 	// Run audit checks.
 	log.Info().Msg("running audit checks")
-	registry := audit.DefaultRegistry()
+	registry := audit.DefaultRegistry(logger.FromContext(ctx))
 	issues := registry.RunAll(ctx, []*model.Page{page})
 	log.Info().Int("issues", len(issues)).Msg("audit complete")
 
@@ -131,7 +132,7 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 		cfg.LighthouseMode = cmd.String("lighthouse-mode")
 	}
 	if cmd.IsSet("psi-key") {
-		cfg.PSIApiKey = cmd.String("psi-key")
+		cfg.PSIAPIKey = cmd.String("psi-key")
 	}
 	if cmd.IsSet("psi-strategy") {
 		cfg.PSIStrategy = cmd.String("psi-strategy")
@@ -143,14 +144,5 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 		cfg.UserAgent = cmd.String("user-agent")
 	}
 
-	// Apply global flags from parent command.
-	if cmd.IsSet("output") {
-		cfg.OutputFormat = cmd.String("output")
-	}
-	if cmd.IsSet("output-file") {
-		cfg.OutputFile = cmd.String("output-file")
-	}
-	if cmd.IsSet("fail-on") {
-		cfg.FailOn = cmd.String("fail-on")
-	}
+	cmdutil.ApplyGlobalOverrides(cmd, cfg)
 }

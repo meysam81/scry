@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 // newTestConfig returns a config suitable for testing.
@@ -46,8 +47,8 @@ func TestCrawler_BasicCrawl(t *testing.T) {
 	defer srv.Close()
 
 	cfg := newTestConfig()
-	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout)
-	c := NewCrawler(cfg, fetcher)
+	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout, logger.Nop())
+	c := NewCrawler(cfg, fetcher, logger.Nop())
 
 	result, err := c.Run(context.Background(), srv.URL+"/")
 	if err != nil {
@@ -87,8 +88,8 @@ func TestCrawler_MaxDepth(t *testing.T) {
 
 	cfg := newTestConfig()
 	cfg.MaxDepth = 2
-	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout)
-	c := NewCrawler(cfg, fetcher)
+	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout, logger.Nop())
+	c := NewCrawler(cfg, fetcher, logger.Nop())
 
 	result, err := c.Run(context.Background(), srv.URL+"/")
 	if err != nil {
@@ -132,8 +133,8 @@ func TestCrawler_MaxPages(t *testing.T) {
 
 	cfg := newTestConfig()
 	cfg.MaxPages = 3
-	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout)
-	c := NewCrawler(cfg, fetcher)
+	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout, logger.Nop())
+	c := NewCrawler(cfg, fetcher, logger.Nop())
 
 	result, err := c.Run(context.Background(), srv.URL+"/")
 	if err != nil {
@@ -167,8 +168,8 @@ func TestCrawler_ContextCancellation(t *testing.T) {
 
 	cfg := newTestConfig()
 	cfg.RateLimit = 1000 // Don't bottleneck on rate.
-	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout)
-	c := NewCrawler(cfg, fetcher)
+	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout, logger.Nop())
+	c := NewCrawler(cfg, fetcher, logger.Nop())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
@@ -205,8 +206,8 @@ func TestCrawler_SitemapSeeding(t *testing.T) {
 	defer srv.Close()
 
 	cfg := newTestConfig()
-	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout)
-	c := NewCrawler(cfg, fetcher)
+	fetcher := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout, logger.Nop())
+	c := NewCrawler(cfg, fetcher, logger.Nop())
 
 	result, err := c.Run(context.Background(), srv.URL+"/")
 	if err != nil {

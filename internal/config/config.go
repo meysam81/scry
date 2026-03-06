@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -32,7 +33,7 @@ type Config struct {
 	// Lighthouse.
 	LighthouseEnabled bool   `env:"SCRY_LIGHTHOUSE"      envDefault:"false"`
 	LighthouseMode    string `env:"SCRY_LIGHTHOUSE_MODE"  envDefault:"psi"`
-	PSIApiKey         string `env:"SCRY_PSI_API_KEY"      envDefault:""`
+	PSIAPIKey         string `env:"SCRY_PSI_API_KEY"      envDefault:""`
 	PSIStrategy       string `env:"SCRY_PSI_STRATEGY"     envDefault:"mobile"`
 
 	// Logging.
@@ -137,6 +138,17 @@ func (c *Config) validate() error {
 		// valid
 	default:
 		return fmt.Errorf("validate config: invalid psi strategy %q", c.PSIStrategy)
+	}
+
+	for _, p := range c.IncludePatterns {
+		if _, err := filepath.Match(p, ""); err != nil {
+			return fmt.Errorf("validate config: invalid include pattern %q: %w", p, err)
+		}
+	}
+	for _, p := range c.ExcludePatterns {
+		if _, err := filepath.Match(p, ""); err != nil {
+			return fmt.Errorf("validate config: invalid exclude pattern %q: %w", p, err)
+		}
 	}
 
 	return nil

@@ -7,9 +7,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/meysam81/scry/internal/logger"
 )
 
-func TestBrowserFetcher_BasicFetch(t *testing.T) {
+func TestFetcher_BasicFetch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping browser test in short mode")
 	}
@@ -21,9 +23,9 @@ func TestBrowserFetcher_BasicFetch(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewBrowserFetcher("", "test-browser-agent/1.0", 30*time.Second)
+	bf, err := NewFetcher("", "test-browser-agent/1.0", 30*time.Second, logger.Nop())
 	if err != nil {
-		t.Fatalf("failed to create BrowserFetcher: %v", err)
+		t.Fatalf("failed to create Fetcher: %v", err)
 	}
 	defer func() { _ = bf.Close() }()
 
@@ -38,7 +40,7 @@ func TestBrowserFetcher_BasicFetch(t *testing.T) {
 	}
 }
 
-func TestBrowserFetcher_StatusCode(t *testing.T) {
+func TestFetcher_StatusCode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping browser test in short mode")
 	}
@@ -50,9 +52,9 @@ func TestBrowserFetcher_StatusCode(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewBrowserFetcher("", "test-agent/1.0", 30*time.Second)
+	bf, err := NewFetcher("", "test-agent/1.0", 30*time.Second, logger.Nop())
 	if err != nil {
-		t.Fatalf("failed to create BrowserFetcher: %v", err)
+		t.Fatalf("failed to create Fetcher: %v", err)
 	}
 	defer func() { _ = bf.Close() }()
 
@@ -66,7 +68,7 @@ func TestBrowserFetcher_StatusCode(t *testing.T) {
 	}
 }
 
-func TestBrowserFetcher_FetchDuration(t *testing.T) {
+func TestFetcher_FetchDuration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping browser test in short mode")
 	}
@@ -78,9 +80,9 @@ func TestBrowserFetcher_FetchDuration(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewBrowserFetcher("", "test-agent/1.0", 30*time.Second)
+	bf, err := NewFetcher("", "test-agent/1.0", 30*time.Second, logger.Nop())
 	if err != nil {
-		t.Fatalf("failed to create BrowserFetcher: %v", err)
+		t.Fatalf("failed to create Fetcher: %v", err)
 	}
 	defer func() { _ = bf.Close() }()
 
@@ -97,7 +99,7 @@ func TestBrowserFetcher_FetchDuration(t *testing.T) {
 	}
 }
 
-func TestBrowserFetcher_ContentType(t *testing.T) {
+func TestFetcher_ContentType(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping browser test in short mode")
 	}
@@ -109,9 +111,9 @@ func TestBrowserFetcher_ContentType(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewBrowserFetcher("", "test-agent/1.0", 30*time.Second)
+	bf, err := NewFetcher("", "test-agent/1.0", 30*time.Second, logger.Nop())
 	if err != nil {
-		t.Fatalf("failed to create BrowserFetcher: %v", err)
+		t.Fatalf("failed to create Fetcher: %v", err)
 	}
 	defer func() { _ = bf.Close() }()
 

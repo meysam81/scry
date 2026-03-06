@@ -17,6 +17,9 @@ func (r *JSONReporter) Name() string { return "json" }
 
 // Write serialises result as indented JSON and writes it to w.
 func (r *JSONReporter) Write(_ context.Context, result *model.CrawlResult, w io.Writer) error {
+	if result == nil {
+		return nil
+	}
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshalling crawl result to JSON: %w", err)

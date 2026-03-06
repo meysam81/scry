@@ -70,8 +70,8 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.LighthouseMode != "psi" {
 		t.Errorf("LighthouseMode = %q, want %q", cfg.LighthouseMode, "psi")
 	}
-	if cfg.PSIApiKey != "" {
-		t.Errorf("PSIApiKey = %q, want empty", cfg.PSIApiKey)
+	if cfg.PSIAPIKey != "" {
+		t.Errorf("PSIAPIKey = %q, want empty", cfg.PSIAPIKey)
 	}
 	if cfg.PSIStrategy != "mobile" {
 		t.Errorf("PSIStrategy = %q, want %q", cfg.PSIStrategy, "mobile")
@@ -231,6 +231,24 @@ func TestValidateMultipleOutputFormatsValid(t *testing.T) {
 	}
 	if formats[0] != "terminal" || formats[1] != "json" {
 		t.Errorf("OutputFormats() = %v, want [terminal json]", formats)
+	}
+}
+
+func TestValidateInvalidGlobPattern(t *testing.T) {
+	clearScryEnv(t)
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error loading defaults: %v", err)
+	}
+	cfg.IncludePatterns = []string{"[invalid"}
+	if err := cfg.validate(); err == nil {
+		t.Fatal("expected error for invalid include pattern, got nil")
+	}
+
+	cfg.IncludePatterns = nil
+	cfg.ExcludePatterns = []string{"[invalid"}
+	if err := cfg.validate(); err == nil {
+		t.Fatal("expected error for invalid exclude pattern, got nil")
 	}
 }
 

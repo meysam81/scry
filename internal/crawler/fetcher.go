@@ -3,6 +3,8 @@
 package crawler
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -13,7 +15,9 @@ import (
 
 	"github.com/meysam81/scry/internal/browser"
 	"github.com/meysam81/scry/internal/config"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/internal/safenet"
 )
 
 // maxBodySize caps the response body read to prevent OOM (10 MB).
@@ -32,20 +36,24 @@ type Fetcher interface {
 
 // HTTPFetcher implements Fetcher using net/http.
 type HTTPFetcher struct {
-	userAgent string
-	timeout   time.Duration
-	transport *http.Transport
+	userAgent    string
+	timeout      time.Duration
+	transport    *http.Transport
+	log          logger.Logger
+	allowPrivate bool // skip SSRF checks (for testing only)
 }
 
 // NewHTTPFetcher creates a new HTTPFetcher with the given user agent and per-request timeout.
-func NewHTTPFetcher(userAgent string, timeout time.Duration) *HTTPFetcher {
+func NewHTTPFetcher(userAgent string, timeout time.Duration, l logger.Logger) *HTTPFetcher {
 	return &HTTPFetcher{
 		userAgent: userAgent,
 		timeout:   timeout,
+		log:       l,
 		transport: &http.Transport{
 			MaxIdleConns:        100,
 			MaxIdleConnsPerHost: 10,
 			IdleConnTimeout:     90 * time.Second,
+			DisableCompression:  true,
 		},
 	}
 }
@@ -57,6 +65,7 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, rawURL string) (*model.Page, er
 		return nil, fmt.Errorf("fetch %s: %w", rawURL, err)
 	}
 	req.Header.Set("User-Agent", f.userAgent)
+	req.Header.Set("Accept-Encoding", "gzip")
 
 	var redirectChain []string
 	seen := make(map[string]bool)
@@ -72,6 +81,9 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, rawURL string) (*model.Page, er
 			if len(via) >= maxRedirects {
 				return ErrRedirectLoop
 			}
+			if !f.allowPrivate && !safenet.IsSafeURL(target) {
+				return fmt.Errorf("redirect to unsafe URL: %s", target)
+			}
 			seen[target] = true
 			redirectChain = append(redirectChain, target)
 			return nil
@@ -83,12 +95,31 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, rawURL string) (*model.Page, er
 	if err != nil {
 		return nil, fmt.Errorf("fetch %s: %w", rawURL, err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			f.log.Warn().Err(err).Str("url", rawURL).Msg("resp body close failed")
+		}
+	}()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBodySize))
 	if err != nil {
 		return nil, fmt.Errorf("fetch %s: read body: %w", rawURL, err)
 	}
+
+	if strings.EqualFold(resp.Header.Get("Content-Encoding"), "gzip") {
+		gr, gzErr := gzip.NewReader(bytes.NewReader(body))
+		if gzErr != nil {
+			return nil, fmt.Errorf("fetch %s: gzip init: %w", rawURL, gzErr)
+		}
+		body, err = io.ReadAll(io.LimitReader(gr, maxBodySize))
+		if cerr := gr.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+		if err != nil {
+			return nil, fmt.Errorf("fetch %s: gzip decompress: %w", rawURL, err)
+		}
+	}
+
 	duration := time.Since(start)
 
 	page := &model.Page{
@@ -116,9 +147,9 @@ func parseContentType(ct string) string {
 // NewFetcher creates the appropriate Fetcher based on configuration.
 // It returns the fetcher, a cleanup function that should be called when done,
 // and any error encountered during creation.
-func NewFetcher(cfg *config.Config) (Fetcher, func(), error) {
+func NewFetcher(cfg *config.Config, l logger.Logger) (Fetcher, func(), error) {
 	if cfg.BrowserMode {
-		bf, err := browser.NewBrowserFetcher(cfg.BrowserlessURL, cfg.UserAgent, cfg.RequestTimeout)
+		bf, err := browser.NewFetcher(cfg.BrowserlessURL, cfg.UserAgent, cfg.RequestTimeout, l)
 		if err != nil {
 			return nil, nil, fmt.Errorf("create browser fetcher: %w", err)
 		}
@@ -126,7 +157,7 @@ func NewFetcher(cfg *config.Config) (Fetcher, func(), error) {
 		return bf, closer, nil
 	}
 
-	f := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout)
+	f := NewHTTPFetcher(cfg.UserAgent, cfg.RequestTimeout, l)
 	noop := func() {}
 	return f, noop, nil
 }
