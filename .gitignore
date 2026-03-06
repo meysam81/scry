@@ -166,3 +166,6 @@ dist
 
 # End of https://www.toptal.com/developers/gitignore/api/go,node
 ignore
+.claude
+scry
+audit-report.json

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scry Audit Report - {{ .SeedURL }}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: #1a1a2e;
+    background: #f5f5fa;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.3rem; margin-bottom: 0.5rem; color: #333; }
+  .meta { color: #555; margin-bottom: 1.5rem; font-size: 0.95rem; }
+  .meta span { display: inline-block; margin-right: 1.5rem; }
+
+  /* Summary cards */
+  .cards {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    flex: 1 1 140px;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .card .label { font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+  .card .value { font-size: 1.8rem; font-weight: 700; }
+  .card.critical .value { color: #dc3545; }
+  .card.warning .value  { color: #e67e22; }
+  .card.info .value     { color: #2980b9; }
+  .card.pages .value    { color: #333; }
+  .card.duration .value { color: #333; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  th, td {
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  th { background: #f0f0f5; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr:last-child td { border-bottom: none; }
+
+  /* Severity badges */
+  .badge {
+    display: inline-block;
+    padding: 0.15em 0.6em;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge-critical { background: #fce4e4; color: #dc3545; }
+  .badge-warning  { background: #fef3e2; color: #e67e22; }
+  .badge-info     { background: #e8f0fe; color: #2980b9; }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filters label { font-size: 0.85rem; font-weight: 600; color: #555; }
+  .filters select, .filters input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #fff;
+  }
+  .filters input { flex: 1; min-width: 200px; }
+
+  /* Details / collapsible */
+  details {
+    margin-bottom: 1rem;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  details > summary {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1rem;
+    user-select: none;
+    list-style: none;
+  }
+  details > summary::before {
+    content: "\25B6\FE0E";
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+  }
+  details[open] > summary::before { transform: rotate(90deg); }
+  details > .content { padding: 0 1rem 1rem; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .cards { flex-direction: column; }
+    .filters { flex-direction: column; }
+    .filters input { min-width: unset; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Scry Audit Report</h1>
+<div class="meta">
+  <span><strong>URL:</strong> {{ .SeedURL }}</span>
+  <span><strong>Crawled:</strong> {{ .CrawledAt }}</span>
+  <span><strong>Duration:</strong> {{ .Duration }}</span>
+</div>
+
+<div class="cards">
+  <div class="card pages">
+    <div class="label">Pages Crawled</div>
+    <div class="value">{{ .PageCount }}</div>
+  </div>
+  <div class="card critical">
+    <div class="label">Critical</div>
+    <div class="value">{{ .CriticalCount }}</div>
+  </div>
+  <div class="card warning">
+    <div class="label">Warning</div>
+    <div class="value">{{ .WarningCount }}</div>
+  </div>
+  <div class="card info">
+    <div class="label">Info</div>
+    <div class="value">{{ .InfoCount }}</div>
+  </div>
+  <div class="card duration">
+    <div class="label">Duration</div>
+    <div class="value">{{ .Duration }}</div>
+  </div>
+</div>
+
+<details open>
+  <summary>Issues ({{ len .Issues }})</summary>
+  <div class="content">
+    <div class="filters">
+      <label for="severity-filter">Severity:</label>
+      <select id="severity-filter" onchange="filterIssues()">
+        <option value="all">All</option>
+        <option value="critical">Critical</option>
+        <option value="warning">Warning</option>
+        <option value="info">Info</option>
+      </select>
+      <label for="search-input">Search:</label>
+      <input type="text" id="search-input" placeholder="Filter by URL, check, or message..." oninput="filterIssues()">
+    </div>
+    <table id="issues-table">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Check</th>
+          <th>URL</th>
+          <th>Message</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Issues -}}
+        <tr data-severity="{{ .Severity }}">
+          <td><span class="badge badge-{{ .Severity }}">{{ .Severity }}</span></td>
+          <td>{{ .CheckName }}</td>
+          <td>{{ .URL }}</td>
+          <td>{{ .Message }}</td>
+          <td>{{ .Detail }}</td>
+        </tr>
+        {{ end -}}
+      </tbody>
+    </table>
+  </div>
+</details>
+
+{{ if .HasLighthouse -}}
+<details open>
+  <summary>Lighthouse Scores</summary>
+  <div class="content">
+    <table>
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Performance</th>
+          <th>Accessibility</th>
+          <th>Best Practices</th>
+          <th>SEO</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Lighthouse -}}
+        <tr>
+          <td>{{ .URL }}</td>
+          <td>{{ .Performance }}</td>
+          <td>{{ .Accessibility }}</td>
+          <td>{{ .BestPractices }}</td>
+          <td>{{ .SEO }}</td>
+        </tr>
+        {{ end -}}
+      </tbody>
+    </table>
+  </div>
+</details>
+{{ end -}}
+
+<script>
+(function() {
+  "use strict";
+
+  window.filterIssues = function() {
+    var severity = document.getElementById("severity-filter").value.toLowerCase();
+    var search = document.getElementById("search-input").value.toLowerCase();
+    var rows = document.querySelectorAll("#issues-table tbody tr");
+
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var rowSeverity = row.getAttribute("data-severity");
+      var text = row.textContent.toLowerCase();
+
+      var severityMatch = (severity === "all" || rowSeverity === severity);
+      var searchMatch = (search === "" || text.indexOf(search) !== -1);
+
+      row.style.display = (severityMatch && searchMatch) ? "" : "none";
+    }
+  };
+})();
+</script>
+</body>
+</html>
