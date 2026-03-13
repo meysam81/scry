@@ -16,6 +16,15 @@ import (
 	"github.com/meysam81/scry/internal/logger"
 )
 
+var (
+	flagLogLevel   string
+	flagLogFormat  string
+	flagOutput     string
+	flagOutputFile string
+	flagFailOn     string
+	flagConfig     string
+)
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -36,36 +45,42 @@ func main() {
 		Usage: "A fast, developer-friendly website auditing tool.",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "log-level",
-				Aliases: []string{"l"},
-				Value:   "info",
-				Usage:   "log level: debug|info|warn|error",
+				Name:        "log-level",
+				Aliases:     []string{"l"},
+				Value:       "info",
+				Usage:       "log level: debug|info|warn|error",
+				Destination: &flagLogLevel,
 			},
 			&cli.StringFlag{
-				Name:  "log-format",
-				Value: "pretty",
-				Usage: "log format: pretty|json",
+				Name:        "log-format",
+				Value:       "pretty",
+				Usage:       "log format: pretty|json",
+				Destination: &flagLogFormat,
 			},
 			&cli.StringFlag{
-				Name:    "output",
-				Aliases: []string{"o"},
-				Value:   "terminal",
-				Usage:   "output format(s), comma-separated",
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Value:       "terminal",
+				Usage:       "output format(s), comma-separated",
+				Destination: &flagOutput,
 			},
 			&cli.StringFlag{
-				Name:  "output-file",
-				Value: "",
-				Usage: "path for non-terminal output",
+				Name:        "output-file",
+				Value:       "",
+				Usage:       "path for non-terminal output",
+				Destination: &flagOutputFile,
 			},
 			&cli.StringFlag{
-				Name:  "fail-on",
-				Value: "",
-				Usage: "severity threshold for non-zero exit",
+				Name:        "fail-on",
+				Value:       "",
+				Usage:       "severity threshold for non-zero exit",
+				Destination: &flagFailOn,
 			},
 			&cli.StringFlag{
-				Name:  "config",
-				Value: "",
-				Usage: "path to scry.yml config file",
+				Name:        "config",
+				Value:       "",
+				Usage:       "path to scry.yml config file",
+				Destination: &flagConfig,
 			},
 		},
 		Before: setupLogger,
@@ -83,11 +98,7 @@ func main() {
 }
 
 // setupLogger configures the logger based on the --log-level and --log-format flags.
-func setupLogger(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-	format := cmd.String("log-format")
-	level := cmd.String("log-level")
-
-	l := logger.Setup(level, format)
-
+func setupLogger(ctx context.Context, _ *cli.Command) (context.Context, error) {
+	l := logger.Setup(flagLogLevel, flagLogFormat)
 	return logger.WithContext(ctx, l), nil
 }

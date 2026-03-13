@@ -17,6 +17,21 @@ import (
 	"github.com/meysam81/scry/internal/model"
 )
 
+var (
+	flagBrowser        bool
+	flagBrowserlessURL string
+	flagLighthouse     bool
+	flagLighthouseMode string
+	flagPSIKey         string
+	flagPSIStrategy    string
+	flagTimeout        time.Duration
+	flagUserAgent      string
+	flagFilterSeverity string
+	flagFilterCategory string
+	flagWatch          bool
+	flagWatchInterval  time.Duration
+)
+
 // Command returns the cli.Command for the check subcommand.
 func Command() *cli.Command {
 	return &cli.Command{
@@ -24,64 +39,76 @@ func Command() *cli.Command {
 		Usage: "Run audit checks on a single URL.",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "browser",
-				Value: false,
-				Usage: "enable rod headless mode",
+				Name:        "browser",
+				Value:       false,
+				Usage:       "enable rod headless mode",
+				Destination: &flagBrowser,
 			},
 			&cli.StringFlag{
-				Name:  "browserless-url",
-				Value: "http://localhost:3000",
-				Usage: "browserless endpoint URL",
+				Name:        "browserless-url",
+				Value:       "http://localhost:3000",
+				Usage:       "browserless endpoint URL",
+				Destination: &flagBrowserlessURL,
 			},
 			&cli.BoolFlag{
-				Name:  "lighthouse",
-				Value: false,
-				Usage: "enable lighthouse scoring",
+				Name:        "lighthouse",
+				Value:       false,
+				Usage:       "enable lighthouse scoring",
+				Destination: &flagLighthouse,
 			},
 			&cli.StringFlag{
-				Name:  "lighthouse-mode",
-				Value: "psi",
-				Usage: "lighthouse mode: psi|browserless",
+				Name:        "lighthouse-mode",
+				Value:       "psi",
+				Usage:       "lighthouse mode: psi|browserless",
+				Destination: &flagLighthouseMode,
 			},
 			&cli.StringFlag{
-				Name:  "psi-key",
-				Value: "",
-				Usage: "PageSpeed Insights API key",
+				Name:        "psi-key",
+				Value:       "",
+				Usage:       "PageSpeed Insights API key",
+				Destination: &flagPSIKey,
 			},
 			&cli.StringFlag{
-				Name:  "psi-strategy",
-				Value: "mobile",
-				Usage: "PSI strategy: mobile|desktop",
+				Name:        "psi-strategy",
+				Value:       "mobile",
+				Usage:       "PSI strategy: mobile|desktop",
+				Destination: &flagPSIStrategy,
 			},
 			&cli.DurationFlag{
-				Name:  "timeout",
-				Value: 10 * time.Second,
-				Usage: "per-request timeout",
+				Name:        "timeout",
+				Value:       10 * time.Second,
+				Usage:       "per-request timeout",
+				Destination: &flagTimeout,
 			},
 			&cli.StringFlag{
-				Name:  "user-agent",
-				Value: "scry/1.0",
-				Usage: "HTTP user-agent string",
+				Name:        "user-agent",
+				Value:       "scry/1.0",
+				Usage:       "HTTP user-agent string",
+				Destination: &flagUserAgent,
 			},
 			&cli.StringFlag{
-				Name:  "filter-severity",
-				Value: "",
-				Usage: "comma-separated severity filter (e.g. critical,warning)",
+				Name:        "filter-severity",
+				Value:       "",
+				Usage:       "comma-separated severity filter (e.g. critical,warning)",
+				Destination: &flagFilterSeverity,
 			},
 			&cli.StringFlag{
-				Name:  "filter-category",
-				Value: "",
-				Usage: "comma-separated category filter (e.g. seo,performance)",
+				Name:        "filter-category",
+				Value:       "",
+				Usage:       "comma-separated category filter (e.g. seo,performance)",
+				Destination: &flagFilterCategory,
 			},
 			&cli.BoolFlag{
-				Name:  "watch",
-				Value: false,
-				Usage: "re-run check on interval",
+				Name:        "watch",
+				Value:       false,
+				Usage:       "re-run check on interval",
+				Destination: &flagWatch,
 			},
 			&cli.DurationFlag{
-				Name:  "watch-interval",
-				Value: 30 * time.Second,
-				Usage: "watch interval",
+				Name:        "watch-interval",
+				Value:       30 * time.Second,
+				Usage:       "watch interval",
+				Destination: &flagWatchInterval,
 			},
 		},
 		Action: runCheck,
@@ -117,8 +144,8 @@ func runCheck(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// If watch mode is enabled, re-run on interval.
-	if cmd.Bool("watch") {
-		interval := cmd.Duration("watch-interval")
+	if flagWatch {
+		interval := flagWatchInterval
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
@@ -174,34 +201,34 @@ func runSingleCheck(ctx context.Context, cfg *config.Config, fetcher crawler.Fet
 // applyFlagOverrides applies CLI flag values to the config, only when explicitly set.
 func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	if cmd.IsSet("browser") {
-		cfg.BrowserMode = cmd.Bool("browser")
+		cfg.BrowserMode = flagBrowser
 	}
 	if cmd.IsSet("browserless-url") {
-		cfg.BrowserlessURL = cmd.String("browserless-url")
+		cfg.BrowserlessURL = flagBrowserlessURL
 	}
 	if cmd.IsSet("lighthouse") {
-		cfg.LighthouseEnabled = cmd.Bool("lighthouse")
+		cfg.LighthouseEnabled = flagLighthouse
 	}
 	if cmd.IsSet("lighthouse-mode") {
-		cfg.LighthouseMode = cmd.String("lighthouse-mode")
+		cfg.LighthouseMode = flagLighthouseMode
 	}
 	if cmd.IsSet("psi-key") {
-		cfg.PSIAPIKey = cmd.String("psi-key")
+		cfg.PSIAPIKey = flagPSIKey
 	}
 	if cmd.IsSet("psi-strategy") {
-		cfg.PSIStrategy = cmd.String("psi-strategy")
+		cfg.PSIStrategy = flagPSIStrategy
 	}
 	if cmd.IsSet("timeout") {
-		cfg.RequestTimeout = cmd.Duration("timeout")
+		cfg.RequestTimeout = flagTimeout
 	}
 	if cmd.IsSet("user-agent") {
-		cfg.UserAgent = cmd.String("user-agent")
+		cfg.UserAgent = flagUserAgent
 	}
 	if cmd.IsSet("filter-severity") {
-		cfg.FilterSeverity = cmd.String("filter-severity")
+		cfg.FilterSeverity = flagFilterSeverity
 	}
 	if cmd.IsSet("filter-category") {
-		cfg.FilterCategory = cmd.String("filter-category")
+		cfg.FilterCategory = flagFilterCategory
 	}
 
 	cmdutil.ApplyGlobalOverrides(cmd, cfg)

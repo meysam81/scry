@@ -18,6 +18,13 @@ import (
 	"github.com/meysam81/scry/internal/model"
 )
 
+var (
+	flagMode     string
+	flagPSIKey   string
+	flagStrategy string
+	flagURLsFile string
+)
+
 // Command returns the cli.Command for the lighthouse subcommand.
 func Command() *cli.Command {
 	return &cli.Command{
@@ -25,24 +32,28 @@ func Command() *cli.Command {
 		Usage: "Run Lighthouse audits on one or more URLs.",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "mode",
-				Value: "psi",
-				Usage: "lighthouse mode: psi|browserless",
+				Name:        "mode",
+				Value:       "psi",
+				Usage:       "lighthouse mode: psi|browserless",
+				Destination: &flagMode,
 			},
 			&cli.StringFlag{
-				Name:  "psi-key",
-				Value: "",
-				Usage: "PageSpeed Insights API key",
+				Name:        "psi-key",
+				Value:       "",
+				Usage:       "PageSpeed Insights API key",
+				Destination: &flagPSIKey,
 			},
 			&cli.StringFlag{
-				Name:  "strategy",
-				Value: "mobile",
-				Usage: "PSI strategy: mobile|desktop",
+				Name:        "strategy",
+				Value:       "mobile",
+				Usage:       "PSI strategy: mobile|desktop",
+				Destination: &flagStrategy,
 			},
 			&cli.StringFlag{
-				Name:  "urls-file",
-				Value: "",
-				Usage: "path to file with URLs (one per line)",
+				Name:        "urls-file",
+				Value:       "",
+				Usage:       "path to file with URLs (one per line)",
+				Destination: &flagURLsFile,
 			},
 		},
 		Action: runLighthouse,
@@ -125,7 +136,7 @@ func collectURLs(cmd *cli.Command) ([]string, error) {
 	}
 
 	// Read from --urls-file if provided.
-	urlsFile := cmd.String("urls-file")
+	urlsFile := flagURLsFile
 	if urlsFile != "" {
 		fileURLs, err := readURLsFile(urlsFile)
 		if err != nil {
@@ -177,12 +188,12 @@ func readURLsFile(path string) (_ []string, readErr error) {
 func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	cmdutil.ApplyGlobalOverrides(cmd, cfg)
 	if cmd.IsSet("mode") {
-		cfg.LighthouseMode = cmd.String("mode")
+		cfg.LighthouseMode = flagMode
 	}
 	if cmd.IsSet("psi-key") {
-		cfg.PSIAPIKey = cmd.String("psi-key")
+		cfg.PSIAPIKey = flagPSIKey
 	}
 	if cmd.IsSet("strategy") {
-		cfg.PSIStrategy = cmd.String("strategy")
+		cfg.PSIStrategy = flagStrategy
 	}
 }
