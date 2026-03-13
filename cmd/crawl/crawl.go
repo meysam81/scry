@@ -9,11 +9,13 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/internal/audit"
+	"github.com/meysam81/scry/internal/baseline"
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/crawler"
 	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/metrics"
+	"github.com/meysam81/scry/internal/rules"
 )
 
 var (
@@ -40,6 +42,9 @@ var (
 	flagCheckpoint      string
 	flagResume          string
 	flagIncremental     string
+	flagRulesFile       string
+	flagSaveBaseline    string
+	flagCompareBaseline string
 )
 
 // Command returns the cli.Command for the crawl subcommand.
@@ -186,6 +191,24 @@ func Command() *cli.Command {
 				Usage:       "incremental crawl cache file",
 				Destination: &flagIncremental,
 			},
+			&cli.StringFlag{
+				Name:        "rules",
+				Value:       "",
+				Usage:       "path to CEL custom rules YAML file",
+				Destination: &flagRulesFile,
+			},
+			&cli.StringFlag{
+				Name:        "save-baseline",
+				Value:       "",
+				Usage:       "save issues to baseline file for future comparison",
+				Destination: &flagSaveBaseline,
+			},
+			&cli.StringFlag{
+				Name:        "compare-baseline",
+				Value:       "",
+				Usage:       "compare current issues against a saved baseline",
+				Destination: &flagCompareBaseline,
+			},
 		},
 		Action: runCrawl,
 	}
@@ -226,8 +249,46 @@ func runCrawl(ctx context.Context, cmd *cli.Command) error {
 	// Run audit checks.
 	l.Info().Msg("running audit checks")
 	registry := audit.DefaultRegistry(l)
+
+	// Load and register custom CEL rules if configured.
+	if cfg.RulesFile != "" {
+		rf, err := rules.LoadRuleFile(cfg.RulesFile)
+		if err != nil {
+			return fmt.Errorf("load rules file: %w", err)
+		}
+		engine, err := rules.NewEngine(rf.Rules, l)
+		if err != nil {
+			return fmt.Errorf("compile rules: %w", err)
+		}
+		l.Info().Int("count", engine.RuleCount()).Msg("loaded custom CEL rules")
+		registry.Register(rules.NewRuleChecker(engine))
+	}
+
 	result.Issues = registry.RunAll(ctx, result.Pages)
 	l.Info().Int("issues", len(result.Issues)).Msg("audit complete")
+
+	// Save baseline if configured (before compare, so the full issue set is captured).
+	if cfg.SaveBaselineFile != "" {
+		if err := baseline.Save(cfg.SaveBaselineFile, result); err != nil {
+			return fmt.Errorf("save baseline: %w", err)
+		}
+		l.Info().Str("path", cfg.SaveBaselineFile).Msg("baseline saved")
+	}
+
+	// Compare against baseline if configured.
+	if cfg.CompareBaselineFile != "" {
+		bl, err := baseline.Load(cfg.CompareBaselineFile)
+		if err != nil {
+			return fmt.Errorf("load baseline: %w", err)
+		}
+		diff := baseline.Diff(bl, result)
+		l.Info().
+			Int("new", len(diff.New)).
+			Int("resolved", len(diff.Resolved)).
+			Int("existing", len(diff.Existing)).
+			Msg("baseline comparison")
+		result.Issues = diff.New
+	}
 
 	// Push metrics if configured.
 	if cfg.MetricsPushURL != "" {
@@ -308,6 +369,15 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	}
 	if cmd.IsSet("incremental") {
 		cfg.IncrementalFile = flagIncremental
+	}
+	if cmd.IsSet("rules") {
+		cfg.RulesFile = flagRulesFile
+	}
+	if cmd.IsSet("save-baseline") {
+		cfg.SaveBaselineFile = flagSaveBaseline
+	}
+	if cmd.IsSet("compare-baseline") {
+		cfg.CompareBaselineFile = flagCompareBaseline
 	}
 
 	cmdutil.ApplyGlobalOverrides(cmd, cfg)

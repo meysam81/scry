@@ -15,6 +15,7 @@ import (
 	"github.com/meysam81/scry/internal/crawler"
 	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/internal/rules"
 )
 
 var (
@@ -30,6 +31,7 @@ var (
 	flagFilterCategory string
 	flagWatch          bool
 	flagWatchInterval  time.Duration
+	flagRulesFile      string
 )
 
 // Command returns the cli.Command for the check subcommand.
@@ -110,6 +112,12 @@ func Command() *cli.Command {
 				Usage:       "watch interval",
 				Destination: &flagWatchInterval,
 			},
+			&cli.StringFlag{
+				Name:        "rules",
+				Value:       "",
+				Usage:       "path to CEL custom rules YAML file",
+				Destination: &flagRulesFile,
+			},
 		},
 		Action: runCheck,
 	}
@@ -183,6 +191,21 @@ func runSingleCheck(ctx context.Context, cfg *config.Config, fetcher crawler.Fet
 	// Run audit checks.
 	l.Info().Msg("running audit checks")
 	registry := audit.DefaultRegistry(l)
+
+	// Load and register custom CEL rules if configured.
+	if cfg.RulesFile != "" {
+		rf, err := rules.LoadRuleFile(cfg.RulesFile)
+		if err != nil {
+			return fmt.Errorf("load rules file: %w", err)
+		}
+		engine, err := rules.NewEngine(rf.Rules, l)
+		if err != nil {
+			return fmt.Errorf("compile rules: %w", err)
+		}
+		l.Info().Int("count", engine.RuleCount()).Msg("loaded custom CEL rules")
+		registry.Register(rules.NewRuleChecker(engine))
+	}
+
 	issues := registry.RunAll(ctx, []*model.Page{page})
 	l.Info().Int("issues", len(issues)).Msg("audit complete")
 
@@ -229,6 +252,9 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	}
 	if cmd.IsSet("filter-category") {
 		cfg.FilterCategory = flagFilterCategory
+	}
+	if cmd.IsSet("rules") {
+		cfg.RulesFile = flagRulesFile
 	}
 
 	cmdutil.ApplyGlobalOverrides(cmd, cfg)

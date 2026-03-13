@@ -52,6 +52,15 @@ type YAMLConfig struct {
 		Enabled        *bool   `yaml:"enabled"`
 		BrowserlessURL *string `yaml:"browserless_url"`
 	} `yaml:"browser"`
+
+	Rules struct {
+		File *string `yaml:"file"`
+	} `yaml:"rules"`
+
+	Baseline struct {
+		Save    *string `yaml:"save"`
+		Compare *string `yaml:"compare"`
+	} `yaml:"baseline"`
 }
 
 // configFileName is the name of the YAML configuration file.
@@ -174,6 +183,19 @@ func mergeYAML(cfg *Config, ycfg *YAMLConfig) error {
 	}
 	if ycfg.Browser.BrowserlessURL != nil && !envSet("SCRY_BROWSERLESS_URL") {
 		cfg.BrowserlessURL = *ycfg.Browser.BrowserlessURL
+	}
+
+	// Rules settings.
+	if ycfg.Rules.File != nil && !envSet("SCRY_RULES_FILE") {
+		cfg.RulesFile = *ycfg.Rules.File
+	}
+
+	// Baseline settings.
+	if ycfg.Baseline.Save != nil && !envSet("SCRY_SAVE_BASELINE") {
+		cfg.SaveBaselineFile = *ycfg.Baseline.Save
+	}
+	if ycfg.Baseline.Compare != nil && !envSet("SCRY_COMPARE_BASELINE") {
+		cfg.CompareBaselineFile = *ycfg.Baseline.Compare
 	}
 
 	return nil

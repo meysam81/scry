@@ -36,6 +36,11 @@ Scry supports three layers of configuration with the following precedence (highe
 | `SCRY_CHECKPOINT_FILE`  | _(empty)_               | Save crawl checkpoint to this file for later resume                                                                       |
 | `SCRY_RESUME_FILE`      | _(empty)_               | Resume crawl from a previous checkpoint file                                                                              |
 | `SCRY_INCREMENTAL_FILE` | _(empty)_               | Incremental crawl cache file for delta-only re-crawls                                                                     |
+| `SCRY_PARALLEL_DOMAINS` | `3`                     | Number of domains to crawl in parallel                                                                                    |
+| `SCRY_METRICS_PUSH_URL` | _(empty)_               | Prometheus Pushgateway URL for audit metrics                                                                              |
+| `SCRY_RULES_FILE`       | _(empty)_               | Path to CEL custom rules YAML file                                                                                        |
+| `SCRY_SAVE_BASELINE`    | _(empty)_               | Save issues to baseline file for future comparison                                                                        |
+| `SCRY_COMPARE_BASELINE` | _(empty)_               | Compare current issues against a saved baseline                                                                           |
 
 ---
 
@@ -74,6 +79,7 @@ scry check [flags] <url>
 | `--filter-category` | _(empty)_               | Comma-separated category filter         |
 | `--watch`           | `false`                 | Re-run check on interval                |
 | `--watch-interval`  | `30s`                   | Watch re-run interval                   |
+| `--rules`           | _(empty)_               | Path to CEL custom rules YAML file      |
 
 ### `crawl` Command Flags
 
@@ -83,28 +89,34 @@ Crawl a website and run audit checks.
 scry crawl [flags] <url>
 ```
 
-| Flag                | Alias | Default                 | Description                             |
-| ------------------- | ----- | ----------------------- | --------------------------------------- |
-| `--depth`           | `-d`  | `5`                     | Maximum crawl depth                     |
-| `--max-pages`       |       | `500`                   | Page cap                                |
-| `--concurrency`     | `-c`  | `10`                    | Parallel fetchers                       |
-| `--browser`         |       | `false`                 | Enable headless browser rendering       |
-| `--browserless-url` |       | `http://localhost:3000` | Browserless endpoint URL                |
-| `--lighthouse`      |       | `false`                 | Enable Lighthouse scoring               |
-| `--lighthouse-mode` |       | `psi`                   | Lighthouse mode: `psi` or `browserless` |
-| `--psi-key`         |       | _(empty)_               | PageSpeed Insights API key              |
-| `--psi-strategy`    |       | `mobile`                | PSI strategy: `mobile` or `desktop`     |
-| `--ignore-robots`   |       | `false`                 | Bypass `robots.txt` directives          |
-| `--include`         |       | _(empty)_               | Glob patterns for URL inclusion         |
-| `--exclude`         |       | _(empty)_               | Glob patterns for URL exclusion         |
-| `--rate-limit`      |       | `50`                    | Requests per second                     |
-| `--timeout`         |       | `10s`                   | Per-request timeout                     |
-| `--user-agent`      |       | `scry/1.0`              | HTTP User-Agent string                  |
-| `--filter-severity` |       | _(empty)_               | Comma-separated severity filter         |
-| `--filter-category` |       | _(empty)_               | Comma-separated category filter         |
-| `--checkpoint`      |       | _(empty)_               | Save crawl checkpoint to file           |
-| `--resume`          |       | _(empty)_               | Resume crawl from checkpoint file       |
-| `--incremental`     |       | _(empty)_               | Incremental crawl cache file            |
+| Flag                 | Alias | Default                 | Description                             |
+| -------------------- | ----- | ----------------------- | --------------------------------------- |
+| `--depth`            | `-d`  | `5`                     | Maximum crawl depth                     |
+| `--max-pages`        |       | `500`                   | Page cap                                |
+| `--concurrency`      | `-c`  | `10`                    | Parallel fetchers                       |
+| `--browser`          |       | `false`                 | Enable headless browser rendering       |
+| `--browserless-url`  |       | `http://localhost:3000` | Browserless endpoint URL                |
+| `--lighthouse`       |       | `false`                 | Enable Lighthouse scoring               |
+| `--lighthouse-mode`  |       | `psi`                   | Lighthouse mode: `psi` or `browserless` |
+| `--psi-key`          |       | _(empty)_               | PageSpeed Insights API key              |
+| `--psi-strategy`     |       | `mobile`                | PSI strategy: `mobile` or `desktop`     |
+| `--ignore-robots`    |       | `false`                 | Bypass `robots.txt` directives          |
+| `--include`          |       | _(empty)_               | Glob patterns for URL inclusion         |
+| `--exclude`          |       | _(empty)_               | Glob patterns for URL exclusion         |
+| `--rate-limit`       |       | `50`                    | Requests per second                     |
+| `--timeout`          |       | `10s`                   | Per-request timeout                     |
+| `--user-agent`       |       | `scry/1.0`              | HTTP User-Agent string                  |
+| `--filter-severity`  |       | _(empty)_               | Comma-separated severity filter         |
+| `--filter-category`  |       | _(empty)_               | Comma-separated category filter         |
+| `--checkpoint`       |       | _(empty)_               | Save crawl checkpoint to file           |
+| `--resume`           |       | _(empty)_               | Resume crawl from checkpoint file       |
+| `--urls-file`        |       | _(empty)_               | File with URLs for multi-domain crawl   |
+| `--parallel-domains` |       | `3`                     | Domains to crawl in parallel            |
+| `--metrics-push`     |       | _(empty)_               | Prometheus Pushgateway URL              |
+| `--incremental`      |       | _(empty)_               | Incremental crawl cache file            |
+| `--rules`            |       | _(empty)_               | Path to CEL custom rules YAML file      |
+| `--save-baseline`    |       | _(empty)_               | Save issues to baseline file            |
+| `--compare-baseline` |       | _(empty)_               | Compare issues against saved baseline   |
 
 ### `lighthouse` Command Flags
 
@@ -178,6 +190,13 @@ lighthouse:
 browser:
   enabled: false
   browserless_url: "http://localhost:3000"
+
+rules:
+  file: "rules/my-rules.yml"
+
+baseline:
+  save: "baseline.json"
+  compare: "baseline.json"
 ```
 
 ### YAML Field Reference
@@ -203,3 +222,6 @@ browser:
 | `lighthouse` | `strategy`        | string | PSI strategy                      |
 | `browser`    | `enabled`         | bool   | Enable headless browser           |
 | `browser`    | `browserless_url` | string | Browserless endpoint URL          |
+| `rules`      | `file`            | string | Path to CEL custom rules YAML     |
+| `baseline`   | `save`            | string | Save baseline to this file        |
+| `baseline`   | `compare`         | string | Compare against this baseline     |

@@ -55,6 +55,13 @@ type Config struct {
 	ResumeFile      string `env:"SCRY_RESUME_FILE"      envDefault:""`
 	IncrementalFile string `env:"SCRY_INCREMENTAL_FILE" envDefault:""`
 
+	// Custom rules.
+	RulesFile string `env:"SCRY_RULES_FILE" envDefault:""`
+
+	// Baseline comparison.
+	SaveBaselineFile    string `env:"SCRY_SAVE_BASELINE"    envDefault:""`
+	CompareBaselineFile string `env:"SCRY_COMPARE_BASELINE" envDefault:""`
+
 	// CLI-only fields (not from env).
 	IncludePatterns []string `env:"-"`
 	ExcludePatterns []string `env:"-"`
