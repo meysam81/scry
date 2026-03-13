@@ -1,37 +1,269 @@
 name: ci
 
+concurrency:
+  cancel-in-progress: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+  group: ci-${{ github.ref_name }}-${{ github.event_name }}
+
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
-  test:
+  prettier:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
     runs-on: self-hosted
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Setup Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
         with:
-          go-version-file: ./go.mod
-      - name: Run tests
-        run: go test -race ./... -count=1 -timeout 120s
+          bun-version: latest
+      - name: Run Prettier
+        run: bunx prettier@v3 -w .
+      - name: Commit if changed
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "The following files were changed by prettier:"
+            git status --porcelain
 
-  lint:
-    runs-on: self-hosted
+            git config user.name "github-actions[bot]"
+            git config user.email "${{ github.actor_id }}+github-actions@users.noreply.github.com"
+            git add .
+            git commit -m "chore: format code with prettier" -m 'skip ci'
+            git fetch origin "$HEAD_REF"
+            git rebase "origin/$HEAD_REF"
+            git push origin "HEAD:$HEAD_REF"
+          else
+            echo "No changes to commit"
+          fi
+
+  checks:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
     permissions:
       contents: read
+      pull-requests: read
+    runs-on: self-hosted
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v6
       - name: Setup Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@4afd733a84b2f1a21f7c40f42a1bab59987efe89 # v6.5.0
+        uses: golangci/golangci-lint-action@v9
+
+  test:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
         with:
-          version: latest
+          go-version-file: ./go.mod
+      - name: Run tests
+        run: go test ./... -count=1 -timeout 120s
+
+  security:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./go.mod
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Run govulncheck
+        run: govulncheck ./...
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - name: Run gosec
+        run: gosec -quiet ./...
+      - name: Scan dependencies with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
+  security-scheduled:
+    if: github.event_name == 'schedule'
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Scan container image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:latest
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: 0
+      - name: Secret scan (full history)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Install semgrep
+        run: pip install semgrep
+      - name: Run semgrep
+        run: semgrep scan --config=auto --config=p/golang --config=p/javascript --error
+
+  simulate-prod:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
+    runs-on: self-hosted
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Setup Cosign CLI
+        uses: sigstore/cosign-installer@v3
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --snapshot
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: goreleaser
+          path: .goreleaser-dist
+
+  build-docker:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    steps:
+      - name: Build docker
+        uses: meysam81/build-docker@main
+        with:
+          build-args: |
+            VERSION=head-${{ github.sha }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ github.event.head_commit.timestamp }}
+            BUILT_BY=github-actions
+          cosign: true
+          image-name: ghcr.io/${{ github.repository }}
+          image-extra-tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.run_id }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  release-please:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    outputs:
+      releases_created: ${{ steps.release-please.outputs.releases_created }}
+      tag_name: ${{ steps.release-please.outputs.tag_name }}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - id: release-please
+        name: Release please
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: go
+
+  build-prod:
+    needs: release-please
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: self-hosted
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+      issues: write
+      packages: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Setup Cosign CLI
+        uses: sigstore/cosign-installer@v3
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          BUILDKIT_MULTI_PLATFORM: "${{ vars.BUILDKIT_MULTI_PLATFORM }}"
+          DISABLE_SBOM: "${{ vars.DISABLE_SBOM }}"
+          GITHUB_TOKEN: ${{ github.token }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          NO_DIGEST: ${{ vars.NO_DIGEST }}
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-checksums: ./.goreleaser-dist/checksums.txt
+      - uses: actions/attest-build-provenance@v3
+        if: env.NO_DIGEST != 'false'
+        with:
+          subject-checksums: ./.goreleaser-dist/digest.txt

@@ -1,0 +1,11 @@
+# syntax=docker/dockerfile:1
+FROM gcr.io/distroless/static-debian12:nonroot
+
+ARG TARGETPLATFORM
+
+COPY $TARGETPLATFORM/scry /usr/local/bin/scry
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/scry"]
+CMD ["--help"]

@@ -1,0 +1,19 @@
+title = "scry gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist"
+
+paths = [
+  '''node_modules/''',
+  '''\.git/''',
+  '''dist/''',
+  '''bun\.lock''',
+  '''go\.sum''',
+  '''\.golangci\.yml''',
+  '''docs/reference/''',
+  '''internal/benchmark/''',
+  '''internal/db/''',
+]

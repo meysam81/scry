@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+env:
+  - GITHUB_TOKEN
+  - HOMEBREW_TAP_GITHUB_TOKEN
+  - COSIGN_EXPERIMENTAL=true
+
+before:
+  hooks:
+    - go mod download
+    - go mod verify
+
+builds:
+  - binary: scry
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - "-trimpath"
+    ldflags:
+      - "-s"
+      - "-w"
+      - "-extldflags '-static'"
+      - "-X main.version={{.Version}}"
+      - "-X main.commit={{.Commit}}"
+      - "-X main.date={{.Date}}"
+      - "-X main.builtBy=goreleaser"
+    main: .
+
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- tolower .Os }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+dist: .goreleaser-dist
+
+dockers_v2:
+  - id: scry
+    images:
+      - ghcr.io/meysam81/{{ .ProjectName }}
+    dockerfile: Dockerfile.goreleaser
+    tags:
+      - "{{ if not .IsSnapshot }}v{{ .Version }}{{ end }}"
+      - "{{ if not .IsSnapshot }}v{{ .Major }}{{ end }}"
+      - "{{ if not .IsSnapshot }}v{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if not .IsSnapshot }}v{{ .Major }}.{{ .Minor }}.{{ .Patch }}{{ end }}"
+      - "{{ .FullCommit }}"
+      - "{{ if .IsNightly }}latest{{ end }}"
+    labels:
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.description": "All-in-one site audit CLI written in Go."
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+    sbom: "{{ not .Env.DISABLE_SBOM }}"
+
+docker_signs:
+  - id: default
+    args:
+      - "sign"
+      - "--yes"
+      - "${artifact}"
+    cmd: cosign
+    output: true
+
+docker_digest:
+  name_template: "digest.txt"
+  disable: "{{ .Env.NO_DIGEST }}"
+
+report_sizes: true
+
+milestones:
+  - close: true
+    fail_on_error: false
+    name_template: "{{ .Tag }}"
+
+announce:
+  skip: "{{gt .Patch 0}}"
+
+checksum:
+  algorithm: sha256
+  name_template: checksums.txt
