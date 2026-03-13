@@ -17,7 +17,7 @@ on:
 jobs:
   prettier:
     if: contains(fromJson('["pull_request","push"]'), github.event_name)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
@@ -55,7 +55,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -68,7 +68,7 @@ jobs:
 
   test:
     if: contains(fromJson('["pull_request","push"]'), github.event_name)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -83,7 +83,7 @@ jobs:
 
   security:
     if: contains(fromJson('["pull_request","push"]'), github.event_name)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -112,7 +112,7 @@ jobs:
 
   security-scheduled:
     if: github.event_name == 'schedule'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -139,7 +139,7 @@ jobs:
 
   simulate-prod:
     if: contains(fromJson('["pull_request","push"]'), github.event_name)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
@@ -175,7 +175,7 @@ jobs:
 
   build-docker:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
@@ -198,7 +198,7 @@ jobs:
 
   release-please:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.release-please.outputs.releases_created }}
       tag_name: ${{ steps.release-please.outputs.tag_name }}
@@ -216,7 +216,7 @@ jobs:
   build-prod:
     needs: release-please
     if: needs.release-please.outputs.releases_created == 'true'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       attestations: write
       contents: write
