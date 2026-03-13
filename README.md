@@ -48,21 +48,21 @@ categorized issues, and actionable recommendations.
 ### For SEO professionals
 
 - **94 audit checks** across SEO, structured data, hreflang, links, images, performance, security, accessibility, health, external links, and TLS
-- **Site health score** (0--100) with per-category breakdowns
+- **Site health score** (0-100) with per-category breakdowns
 - **Structured data validation** for 9 Schema.org types (Article, Product, FAQPage, LocalBusiness, BreadcrumbList, Event, Recipe, VideoObject, BlogPosting)
 - **Hreflang cross-validation** with return-link and x-default checks
-- **Content quality metrics** -- reading level, word count, content-to-HTML ratio, thin content detection
-- **Content duplication** -- SimHash near-duplicate and exact-duplicate detection
-- **Internal PageRank** -- see which pages concentrate link equity
+- **Content quality metrics** - reading level, word count, content-to-HTML ratio, thin content detection
+- **Content duplication** - SimHash near-duplicate and exact-duplicate detection
+- **Internal PageRank** - see which pages concentrate link equity
 
 ### For developers
 
-- **CI/CD native** -- SARIF for GitHub PR annotations, JUnit for Jenkins/GitLab, `--fail-on critical` for exit codes
-- **Baseline comparison** -- track regressions across deploys with `--save-baseline` / `--compare-baseline`
-- **9 output formats** -- terminal, JSON, CSV, Markdown, HTML, SARIF, JUnit, JSONL, PDF
-- **Custom rules** -- write your own checks with CEL expressions
-- **Prometheus metrics** -- push audit results to Pushgateway for dashboards and alerting
-- **Watch mode** -- re-run checks on interval during development
+- **CI/CD native** - SARIF for GitHub PR annotations, JUnit for Jenkins/GitLab, `--fail-on critical` for exit codes
+- **Baseline comparison** - track regressions across deploys with `--save-baseline` / `--compare-baseline`
+- **9 output formats** - terminal, JSON, CSV, Markdown, HTML, SARIF, JUnit, JSONL, PDF
+- **Custom rules** - write your own checks with CEL expressions
+- **Prometheus metrics** - push audit results to Pushgateway for dashboards and alerting
+- **Watch mode** - re-run checks on interval during development
 
 ## What Scry Checks
 
@@ -84,25 +84,25 @@ categorized issues, and actionable recommendations.
 
 ## Commands
 
-**`scry crawl <url>`** -- Crawl and audit an entire site.
+**`scry crawl <url>`** - Crawl and audit an entire site.
 
 ```bash
 scry crawl https://example.com --output json,html --output-file report
 ```
 
-**`scry check <url>`** -- Audit a single page.
+**`scry check <url>`** - Audit a single page.
 
 ```bash
 scry check https://example.com/blog/post --filter-category seo,performance
 ```
 
-**`scry lighthouse <url>`** -- Run Lighthouse analysis.
+**`scry lighthouse <url>`** - Run Lighthouse analysis.
 
 ```bash
 scry lighthouse https://example.com --psi-key $PSI_API_KEY
 ```
 
-**`scry validate`** -- Validate your configuration file.
+**`scry validate`** - Validate your configuration file.
 
 ```bash
 scry validate
