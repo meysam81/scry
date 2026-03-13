@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -19,9 +20,12 @@ import (
 var internalClient = &http.Client{Timeout: 15 * time.Second}
 
 // robotsRule represents a single Allow or Disallow directive.
+// When the path contains wildcard characters (* or $), a compiled
+// regexp is stored for matching; otherwise plain prefix matching is used.
 type robotsRule struct {
 	path  string
 	allow bool
+	re    *regexp.Regexp // non-nil when path contains * or trailing $
 }
 
 // robotsRules holds the parsed rules for a single host.
@@ -60,7 +64,13 @@ func (rc *RobotsChecker) IsAllowed(ctx context.Context, rawURL string) bool {
 		rules = rc.fetchAndCache(ctx, parsed.Scheme, host)
 	}
 
-	return rules.isAllowed(parsed.Path)
+	// Use the full path including query string so that $ anchors
+	// in robots.txt patterns can distinguish /file.pdf from /file.pdf?v=1.
+	matchPath := parsed.Path
+	if parsed.RawQuery != "" {
+		matchPath = parsed.Path + "?" + parsed.RawQuery
+	}
+	return rules.isAllowed(matchPath)
 }
 
 // getRules returns cached rules for a host, or nil if not cached.
@@ -111,9 +121,46 @@ func (rc *RobotsChecker) cacheEmpty(host string) *robotsRules {
 	return rules
 }
 
+// compileRobotsPattern converts a robots.txt path pattern into a compiled
+// regexp when the pattern contains wildcard characters (* or trailing $).
+// Returns nil when the pattern uses only simple prefix semantics.
+func compileRobotsPattern(pattern string) *regexp.Regexp {
+	if !strings.Contains(pattern, "*") && !strings.HasSuffix(pattern, "$") {
+		return nil
+	}
+
+	// Build a regex from the pattern:
+	//  - Escape regex metacharacters (except our special * and $)
+	//  - Replace * with .*
+	//  - Preserve trailing $ as end-of-string anchor
+	hasEndAnchor := strings.HasSuffix(pattern, "$")
+	if hasEndAnchor {
+		pattern = pattern[:len(pattern)-1]
+	}
+
+	var b strings.Builder
+	b.WriteString("^")
+	for _, part := range strings.Split(pattern, "*") {
+		b.WriteString(regexp.QuoteMeta(part))
+		b.WriteString(".*")
+	}
+	// Remove the trailing .* that was added after the last split segment.
+	s := b.String()
+	s = s[:len(s)-2]
+
+	if hasEndAnchor {
+		s += "$"
+	}
+
+	re, err := regexp.Compile(s)
+	if err != nil {
+		return nil
+	}
+	return re
+}
+
 // parseRobotsTxt parses robots.txt content, extracting rules for the given user agent.
 // Consecutive User-agent lines form a group that shares subsequent directives.
-// TODO: Support robots.txt wildcard patterns (* and $).
 func parseRobotsTxt(r io.Reader, userAgent string) *robotsRules {
 	scanner := bufio.NewScanner(r)
 	ua := strings.ToLower(userAgent)
@@ -176,7 +223,7 @@ func parseRobotsTxt(r io.Reader, userAgent string) *robotsRules {
 			continue
 		}
 
-		rule := robotsRule{path: value, allow: key == "allow"}
+		rule := robotsRule{path: value, allow: key == "allow", re: compileRobotsPattern(value)}
 		if groupHasMatch {
 			specificRules.rules = append(specificRules.rules, rule)
 		} else {
@@ -190,6 +237,16 @@ func parseRobotsTxt(r io.Reader, userAgent string) *robotsRules {
 	return &allRules
 }
 
+// matchesRule reports whether the given path matches a robots.txt rule.
+// For rules with compiled regexps (wildcard patterns), regex matching is used.
+// Otherwise, plain prefix matching is applied.
+func matchesRule(rule robotsRule, path string) bool {
+	if rule.re != nil {
+		return rule.re.MatchString(path)
+	}
+	return strings.HasPrefix(path, rule.path)
+}
+
 // isAllowed checks if the given path is allowed by the rules.
 // Allow rules take precedence over Disallow rules.
 func (rr *robotsRules) isAllowed(path string) bool {
@@ -198,16 +255,19 @@ func (rr *robotsRules) isAllowed(path string) bool {
 	}
 
 	// Find the most specific matching rule.
-	// Longer prefix matches take precedence.
+	// Longer pattern length takes precedence.
 	// Among equal-length matches, Allow wins.
 	bestLen := -1
 	allowed := true
 
 	for _, rule := range rr.rules {
-		if strings.HasPrefix(path, rule.path) && len(rule.path) > bestLen {
+		if !matchesRule(rule, path) {
+			continue
+		}
+		if len(rule.path) > bestLen {
 			bestLen = len(rule.path)
 			allowed = rule.allow
-		} else if strings.HasPrefix(path, rule.path) && len(rule.path) == bestLen && rule.allow {
+		} else if len(rule.path) == bestLen && rule.allow {
 			allowed = true
 		}
 	}

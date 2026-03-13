@@ -7,7 +7,7 @@ import (
 func TestAllReportersContainsExpectedEntries(t *testing.T) {
 	reporters := AllReporters()
 
-	expected := []string{"terminal", "json", "csv", "markdown", "html"}
+	expected := []string{"terminal", "json", "csv", "markdown", "html", "sarif", "junit", "jsonl", "pdf"}
 	for _, name := range expected {
 		r, ok := reporters[name]
 		if !ok {

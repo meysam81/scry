@@ -3,12 +3,15 @@ package audit
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/meysam81/scry/internal/model"
 )
+
+var versionRe = regexp.MustCompile(`\d+\.\d+`)
 
 const (
 	maxRedirectHops = 2
@@ -34,6 +37,9 @@ func (c *HealthChecker) Check(_ context.Context, page *model.Page) []model.Issue
 	issues = append(issues, c.checkRedirects(page)...)
 	issues = append(issues, c.checkTTFB(page)...)
 	issues = append(issues, c.checkMixedContent(page)...)
+	issues = append(issues, c.checkServerVersionLeak(page)...)
+	issues = append(issues, c.checkHTTPSRedirectNotPermanent(page)...)
+	issues = append(issues, c.checkMissingCharset(page)...)
 
 	return issues
 }
@@ -117,4 +123,64 @@ func (c *HealthChecker) checkMixedContent(page *model.Page) []model.Issue {
 		Message:   fmt.Sprintf("HTTPS page loads %d HTTP assets", len(offending)),
 		Detail:    strings.Join(offending, "\n"),
 	}}
+}
+
+func (c *HealthChecker) checkServerVersionLeak(page *model.Page) []model.Issue {
+	if page.Headers == nil {
+		return nil
+	}
+	server := page.Headers.Get("Server")
+	if server == "" {
+		return nil
+	}
+	if versionRe.MatchString(server) {
+		return []model.Issue{{
+			CheckName: "health/server-version-leak",
+			Severity:  model.SeverityInfo,
+			URL:       page.URL,
+			Message:   fmt.Sprintf("Server header reveals version: %s", server),
+		}}
+	}
+	return nil
+}
+
+func (c *HealthChecker) checkHTTPSRedirectNotPermanent(page *model.Page) []model.Issue {
+	if !strings.HasPrefix(page.URL, "https://") {
+		return nil
+	}
+	if len(page.RedirectChain) == 0 {
+		return nil
+	}
+	first := page.RedirectChain[0]
+	if strings.HasPrefix(first, "http://") {
+		// The redirect chain starts with an HTTP URL, which means there was an
+		// HTTP->HTTPS redirect. Check the status code: for the initial redirect
+		// we infer non-permanent when the first entry is HTTP (the crawler stores
+		// the URLs, not the status codes). However, we can only flag this if the
+		// page records redirect status codes. Since model.Page does not carry
+		// per-hop status codes, we use a heuristic: if the page itself reports a
+		// non-permanent redirect status (302 or 307), flag it.
+		if page.StatusCode == 302 || page.StatusCode == 307 {
+			return []model.Issue{{
+				CheckName: "health/https-redirect-not-permanent",
+				Severity:  model.SeverityWarning,
+				URL:       page.URL,
+				Message:   fmt.Sprintf("HTTP to HTTPS redirect uses non-permanent status %d; prefer 301 or 308", page.StatusCode),
+			}}
+		}
+	}
+	return nil
+}
+
+func (c *HealthChecker) checkMissingCharset(page *model.Page) []model.Issue {
+	ct := strings.ToLower(page.ContentType)
+	if strings.Contains(ct, "text/html") && !strings.Contains(ct, "charset") {
+		return []model.Issue{{
+			CheckName: "health/missing-charset",
+			Severity:  model.SeverityWarning,
+			URL:       page.URL,
+			Message:   fmt.Sprintf("Content-Type header is missing charset: %s", page.ContentType),
+		}}
+	}
+	return nil
 }

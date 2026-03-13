@@ -1,12 +1,15 @@
 package crawler
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // maxSitemapDepth is the maximum recursion depth for sitemap index resolution.
@@ -35,7 +38,7 @@ type sitemap struct {
 }
 
 // ParseSitemap fetches and parses a sitemap.xml, returning discovered URLs.
-// TODO: Support gzip-compressed sitemaps.
+// Gzip-compressed sitemaps (.xml.gz) are transparently decompressed.
 func ParseSitemap(ctx context.Context, sitemapURL string) []string {
 	parsed, err := url.Parse(sitemapURL)
 	if err != nil {
@@ -90,7 +93,12 @@ func parseSitemapRecursive(ctx context.Context, sitemapURL, allowedHost string, 
 	return nil
 }
 
+// gzipMagic contains the first two bytes of a gzip stream.
+var gzipMagic = []byte{0x1f, 0x8b}
+
 // fetchSitemapBody retrieves the raw body of a sitemap URL.
+// Gzip-compressed responses are transparently decompressed based on the URL
+// suffix (.gz), Content-Encoding header, Content-Type header, or gzip magic bytes.
 func fetchSitemapBody(ctx context.Context, sitemapURL string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sitemapURL, nil)
 	if err != nil {
@@ -107,5 +115,43 @@ func fetchSitemapBody(ctx context.Context, sitemapURL string) ([]byte, error) {
 		return nil, fmt.Errorf("sitemap %s: status %d", sitemapURL, resp.StatusCode)
 	}
 
-	return io.ReadAll(io.LimitReader(resp.Body, maxBodySize))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBodySize))
+	if err != nil {
+		return nil, err
+	}
+
+	if isGzipped(sitemapURL, resp, body) {
+		return decompressGzip(body)
+	}
+
+	return body, nil
+}
+
+// isGzipped determines whether the response body is gzip-compressed by
+// checking the URL suffix, response headers, and gzip magic bytes.
+func isGzipped(sitemapURL string, resp *http.Response, body []byte) bool {
+	if strings.HasSuffix(sitemapURL, ".gz") {
+		return true
+	}
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		return true
+	}
+	if strings.Contains(resp.Header.Get("Content-Type"), "gzip") {
+		return true
+	}
+	if len(body) >= 2 && bytes.HasPrefix(body, gzipMagic) {
+		return true
+	}
+	return false
+}
+
+// decompressGzip decompresses a gzip-compressed byte slice.
+func decompressGzip(data []byte) ([]byte, error) {
+	gr, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("gzip reader: %w", err)
+	}
+	defer func() { _ = gr.Close() }()
+
+	return io.ReadAll(io.LimitReader(gr, maxBodySize))
 }

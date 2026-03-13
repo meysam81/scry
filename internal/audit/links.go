@@ -3,8 +3,10 @@ package audit
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/meysam81/scry/internal/model"
+	"golang.org/x/net/html"
 )
 
 const maxLinkDepth = 4
@@ -20,9 +22,69 @@ func NewLinkChecker() *LinkChecker {
 // Name returns the checker name.
 func (c *LinkChecker) Name() string { return "links" }
 
-// Check returns nil — link checks are site-wide only.
-func (c *LinkChecker) Check(_ context.Context, _ *model.Page) []model.Issue {
+// Check runs per-page link analysis.
+func (c *LinkChecker) Check(_ context.Context, page *model.Page) []model.Issue {
+	if !isHTMLContent(page) {
+		return nil
+	}
+	doc := parseHTMLDocLog(page.Body, page.URL)
+	if doc == nil {
+		return nil
+	}
+
+	var issues []model.Issue
+	issues = append(issues, c.checkExcessiveLinks(doc, page.URL)...)
+	issues = append(issues, c.checkGenericAnchorText(doc, page.URL)...)
+	return issues
+}
+
+// checkExcessiveLinks reports pages that have more than 100 <a href> links.
+func (c *LinkChecker) checkExcessiveLinks(doc *html.Node, url string) []model.Issue {
+	const maxLinks = 100
+	anchors := findNodes(doc, "a")
+	count := 0
+	for _, a := range anchors {
+		if _, ok := getAttr(a, "href"); ok {
+			count++
+		}
+	}
+	if count > maxLinks {
+		return []model.Issue{{
+			CheckName: "links/excessive-links",
+			Severity:  model.SeverityInfo,
+			URL:       url,
+			Message:   fmt.Sprintf("page has %d links, which exceeds the recommended maximum of %d", count, maxLinks),
+		}}
+	}
 	return nil
+}
+
+// checkGenericAnchorText reports <a> elements whose visible text is a generic
+// phrase that provides poor context for SEO and accessibility.
+func (c *LinkChecker) checkGenericAnchorText(doc *html.Node, url string) []model.Issue {
+	genericTexts := map[string]struct{}{
+		"click here": {},
+		"read more":  {},
+		"learn more": {},
+		"here":       {},
+		"more":       {},
+		"link":       {},
+		"this":       {},
+	}
+
+	var issues []model.Issue
+	for _, a := range findNodes(doc, "a") {
+		text := strings.ToLower(strings.TrimSpace(textContent(a)))
+		if _, ok := genericTexts[text]; ok {
+			issues = append(issues, model.Issue{
+				CheckName: "links/generic-anchor-text",
+				Severity:  model.SeverityInfo,
+				URL:       url,
+				Message:   fmt.Sprintf("link has generic anchor text %q", text),
+			})
+		}
+	}
+	return issues
 }
 
 // CheckSite runs site-wide link analysis.

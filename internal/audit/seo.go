@@ -3,6 +3,7 @@ package audit
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/meysam81/scry/internal/model"
@@ -43,8 +44,13 @@ func (c *SEOChecker) Check(_ context.Context, page *model.Page) []model.Issue {
 	issues = append(issues, c.checkMetaDescription(doc, page.URL)...)
 	issues = append(issues, c.checkH1(doc, page.URL)...)
 	issues = append(issues, c.checkCanonical(doc, page.URL)...)
+	issues = append(issues, c.checkMultipleCanonical(doc, page.URL)...)
+	issues = append(issues, c.checkMetaRobotsConflict(doc, page.URL)...)
 	issues = append(issues, c.checkLang(doc, page.URL)...)
 	issues = append(issues, c.checkOpenGraph(doc, page.URL)...)
+	issues = append(issues, c.checkTwitterCard(doc, page.URL)...)
+	issues = append(issues, c.checkViewport(doc, page.URL)...)
+	issues = append(issues, c.checkURLIssues(page.URL)...)
 
 	return issues
 }
@@ -52,12 +58,27 @@ func (c *SEOChecker) Check(_ context.Context, page *model.Page) []model.Issue {
 // CheckSite runs site-wide SEO checks.
 func (c *SEOChecker) CheckSite(_ context.Context, pages []*model.Page) []model.Issue {
 	var issues []model.Issue
+	titlePages := make(map[string][]string) // title → list of URLs
+
 	for _, p := range pages {
-		if !isHTMLContent(p) || !p.InSitemap {
+		if !isHTMLContent(p) {
 			continue
 		}
 		doc := parseHTMLDocLog(p.Body, p.URL)
 		if doc == nil {
+			continue
+		}
+
+		// Collect titles for duplicate detection.
+		titles := findNodes(doc, "title")
+		if len(titles) > 0 {
+			title := strings.TrimSpace(textContent(titles[0]))
+			if title != "" {
+				titlePages[title] = append(titlePages[title], p.URL)
+			}
+		}
+
+		if !p.InSitemap {
 			continue
 		}
 		robots := findMeta(doc, "robots")
@@ -70,6 +91,19 @@ func (c *SEOChecker) CheckSite(_ context.Context, pages []*model.Page) []model.I
 			})
 		}
 	}
+
+	// Report duplicate titles.
+	for title, urls := range titlePages {
+		if len(urls) > 1 {
+			issues = append(issues, model.Issue{
+				CheckName: "seo/duplicate-titles",
+				Severity:  model.SeverityWarning,
+				URL:       urls[0],
+				Message:   fmt.Sprintf("title %q is shared by %d pages", title, len(urls)),
+			})
+		}
+	}
+
 	return issues
 }
 
@@ -197,6 +231,102 @@ func (c *SEOChecker) checkOpenGraph(doc *html.Node, url string) []model.Issue {
 		})
 	}
 	return issues
+}
+
+func (c *SEOChecker) checkMultipleCanonical(doc *html.Node, url string) []model.Issue {
+	var count int
+	for _, link := range findNodes(doc, "link") {
+		rel, _ := getAttr(link, "rel")
+		if strings.EqualFold(rel, "canonical") {
+			count++
+		}
+	}
+	if count > 1 {
+		return []model.Issue{{
+			CheckName: "seo/multiple-canonical",
+			Severity:  model.SeverityWarning,
+			URL:       url,
+			Message:   fmt.Sprintf("page has %d canonical links, expected at most 1", count),
+		}}
+	}
+	return nil
+}
+
+func (c *SEOChecker) checkMetaRobotsConflict(doc *html.Node, pageURL string) []model.Issue {
+	robots := findMeta(doc, "robots")
+	if !strings.Contains(strings.ToLower(robots), "noindex") {
+		return nil
+	}
+	// Check if a canonical link also exists.
+	for _, link := range findNodes(doc, "link") {
+		rel, _ := getAttr(link, "rel")
+		if strings.EqualFold(rel, "canonical") {
+			return []model.Issue{{
+				CheckName: "seo/meta-robots-conflict",
+				Severity:  model.SeverityWarning,
+				URL:       pageURL,
+				Message:   "page has both noindex robots directive and a canonical link",
+			}}
+		}
+	}
+	return nil
+}
+
+func (c *SEOChecker) checkTwitterCard(doc *html.Node, pageURL string) []model.Issue {
+	// Check both name and property attributes.
+	if findMeta(doc, "twitter:card") != "" {
+		return nil
+	}
+	if findMetaProperty(doc, "twitter:card") != "" {
+		return nil
+	}
+	return []model.Issue{{
+		CheckName: "seo/missing-twitter-card",
+		Severity:  model.SeverityInfo,
+		URL:       pageURL,
+		Message:   "page is missing a twitter:card meta tag",
+	}}
+}
+
+func (c *SEOChecker) checkViewport(doc *html.Node, pageURL string) []model.Issue {
+	if findMeta(doc, "viewport") != "" {
+		return nil
+	}
+	return []model.Issue{{
+		CheckName: "seo/missing-viewport",
+		Severity:  model.SeverityCritical,
+		URL:       pageURL,
+		Message:   "page is missing a viewport meta tag",
+	}}
+}
+
+func (c *SEOChecker) checkURLIssues(rawURL string) []model.Issue {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return nil
+	}
+	path := u.Path
+
+	var reasons []string
+	if len(rawURL) > 100 {
+		reasons = append(reasons, fmt.Sprintf("length is %d characters (>100)", len(rawURL)))
+	}
+	if strings.Contains(path, "_") {
+		reasons = append(reasons, "path contains underscores")
+	}
+	if path != strings.ToLower(path) {
+		reasons = append(reasons, "path contains uppercase letters")
+	}
+
+	if len(reasons) == 0 {
+		return nil
+	}
+	return []model.Issue{{
+		CheckName: "seo/url-issues",
+		Severity:  model.SeverityInfo,
+		URL:       rawURL,
+		Message:   "URL has issues: " + strings.Join(reasons, ", "),
+	}}
 }
 
 // textContent returns the concatenated text content of a node and its children.

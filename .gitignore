@@ -170,3 +170,5 @@ ignore
 .worktrees
 scry
 audit-report.json
+files.txt
+ROADMAP.md

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/meysam81/scry/internal/logger"
@@ -134,5 +135,122 @@ func TestRobotsChecker_SpecificUserAgent(t *testing.T) {
 	// When specific rules are found, wildcard rules are not used.
 	if !rc.IsAllowed(context.Background(), srv.URL+"/all-blocked") {
 		t.Error("/all-blocked should be allowed for scry agent (specific rules take precedence)")
+	}
+}
+
+func TestRobotsChecker_WildcardStar(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = fmt.Fprint(w, "User-agent: *\nDisallow: /*.pdf\nDisallow: /admin*\n")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	rc := NewRobotsChecker("scry", logger.Nop())
+
+	tests := []struct {
+		path    string
+		allowed bool
+	}{
+		{"/docs/file.pdf", false},
+		{"/docs/file.pdf?v=1", false}, // no $ anchor, so query string still matches
+		{"/file.pdf", false},
+		{"/docs/file.txt", true},
+		{"/admin", false},
+		{"/admin/", false},
+		{"/admin/page", false},
+		{"/public", true},
+	}
+
+	for _, tt := range tests {
+		got := rc.IsAllowed(context.Background(), srv.URL+tt.path)
+		if got != tt.allowed {
+			t.Errorf("path %q: got allowed=%v, want %v", tt.path, got, tt.allowed)
+		}
+	}
+}
+
+func TestRobotsChecker_EndAnchor(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = fmt.Fprint(w, "User-agent: *\nDisallow: /*.pdf$\n")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	rc := NewRobotsChecker("scry", logger.Nop())
+
+	tests := []struct {
+		path    string
+		allowed bool
+	}{
+		{"/docs/file.pdf", false},
+		{"/docs/file.pdf?v=1", true}, // $ means must end with .pdf
+		{"/file.pdf", false},
+		{"/docs/file.txt", true},
+	}
+
+	for _, tt := range tests {
+		got := rc.IsAllowed(context.Background(), srv.URL+tt.path)
+		if got != tt.allowed {
+			t.Errorf("path %q: got allowed=%v, want %v", tt.path, got, tt.allowed)
+		}
+	}
+}
+
+func TestRobotsChecker_WildcardWithEndAnchor(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = fmt.Fprint(w, "User-agent: *\nDisallow: /private/*/secret$\n")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	rc := NewRobotsChecker("scry", logger.Nop())
+
+	tests := []struct {
+		path    string
+		allowed bool
+	}{
+		{"/private/foo/secret", false},
+		{"/private/bar/baz/secret", false},
+		{"/private/foo/secret/more", true}, // $ anchor prevents this match
+		{"/private/foo/public", true},
+	}
+
+	for _, tt := range tests {
+		got := rc.IsAllowed(context.Background(), srv.URL+tt.path)
+		if got != tt.allowed {
+			t.Errorf("path %q: got allowed=%v, want %v", tt.path, got, tt.allowed)
+		}
+	}
+}
+
+func TestRobotsChecker_PlainPrefixStillWorks(t *testing.T) {
+	// Ensure patterns without wildcards continue to use prefix matching.
+	rules := parseRobotsTxt(strings.NewReader("User-agent: *\nDisallow: /admin\nAllow: /admin/public\n"), "scry")
+
+	tests := []struct {
+		path    string
+		allowed bool
+	}{
+		{"/admin", false},
+		{"/admin/settings", false},
+		{"/admin/public", true},
+		{"/admin/public/page", true},
+		{"/other", true},
+	}
+
+	for _, tt := range tests {
+		got := rules.isAllowed(tt.path)
+		if got != tt.allowed {
+			t.Errorf("path %q: got allowed=%v, want %v", tt.path, got, tt.allowed)
+		}
 	}
 }

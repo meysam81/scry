@@ -138,6 +138,157 @@ func TestHealthChecker_Check(t *testing.T) {
 			wantCheck: "health/mixed-content",
 			wantIssue: false,
 		},
+		// server-version-leak checks
+		{
+			name: "server header with version",
+			page: &model.Page{
+				URL:        "https://example.com",
+				StatusCode: 200,
+				Headers:    http.Header{"Server": []string{"Apache/2.4.41"}},
+			},
+			wantCheck:  "health/server-version-leak",
+			wantSev:    model.SeverityInfo,
+			wantIssue:  true,
+			wantSubstr: "Apache/2.4.41",
+		},
+		{
+			name: "server header nginx with version",
+			page: &model.Page{
+				URL:        "https://example.com",
+				StatusCode: 200,
+				Headers:    http.Header{"Server": []string{"nginx/1.18.0"}},
+			},
+			wantCheck:  "health/server-version-leak",
+			wantSev:    model.SeverityInfo,
+			wantIssue:  true,
+			wantSubstr: "nginx/1.18.0",
+		},
+		{
+			name: "server header without version no issue",
+			page: &model.Page{
+				URL:        "https://example.com",
+				StatusCode: 200,
+				Headers:    http.Header{"Server": []string{"cloudflare"}},
+			},
+			wantCheck: "health/server-version-leak",
+			wantIssue: false,
+		},
+		{
+			name: "no server header no issue",
+			page: &model.Page{
+				URL:        "https://example.com",
+				StatusCode: 200,
+				Headers:    http.Header{},
+			},
+			wantCheck: "health/server-version-leak",
+			wantIssue: false,
+		},
+		// https-redirect-not-permanent checks
+		{
+			name: "http to https redirect with 302",
+			page: &model.Page{
+				URL:           "https://example.com",
+				StatusCode:    302,
+				RedirectChain: []string{"http://example.com"},
+				Headers:       http.Header{},
+			},
+			wantCheck:  "health/https-redirect-not-permanent",
+			wantSev:    model.SeverityWarning,
+			wantIssue:  true,
+			wantSubstr: "302",
+		},
+		{
+			name: "http to https redirect with 307",
+			page: &model.Page{
+				URL:           "https://example.com",
+				StatusCode:    307,
+				RedirectChain: []string{"http://example.com"},
+				Headers:       http.Header{},
+			},
+			wantCheck:  "health/https-redirect-not-permanent",
+			wantSev:    model.SeverityWarning,
+			wantIssue:  true,
+			wantSubstr: "307",
+		},
+		{
+			name: "http to https redirect with 301 no issue",
+			page: &model.Page{
+				URL:           "https://example.com",
+				StatusCode:    301,
+				RedirectChain: []string{"http://example.com"},
+				Headers:       http.Header{},
+			},
+			wantCheck: "health/https-redirect-not-permanent",
+			wantIssue: false,
+		},
+		{
+			name: "https only redirect chain no issue",
+			page: &model.Page{
+				URL:           "https://example.com/page",
+				StatusCode:    302,
+				RedirectChain: []string{"https://example.com/old-page"},
+				Headers:       http.Header{},
+			},
+			wantCheck: "health/https-redirect-not-permanent",
+			wantIssue: false,
+		},
+		{
+			name: "http page no redirect check",
+			page: &model.Page{
+				URL:           "http://example.com",
+				StatusCode:    302,
+				RedirectChain: []string{"http://other.com"},
+				Headers:       http.Header{},
+			},
+			wantCheck: "health/https-redirect-not-permanent",
+			wantIssue: false,
+		},
+		{
+			name: "no redirect chain no issue",
+			page: &model.Page{
+				URL:        "https://example.com",
+				StatusCode: 200,
+				Headers:    http.Header{},
+			},
+			wantCheck: "health/https-redirect-not-permanent",
+			wantIssue: false,
+		},
+		// missing-charset checks
+		{
+			name: "content type missing charset",
+			page: &model.Page{
+				URL:         "https://example.com",
+				StatusCode:  200,
+				ContentType: "text/html",
+				Headers:     http.Header{},
+			},
+			wantCheck:  "health/missing-charset",
+			wantSev:    model.SeverityWarning,
+			wantIssue:  true,
+			wantSubstr: "missing charset",
+		},
+		{
+			name: "content type with charset no issue",
+			page: &model.Page{
+				URL:         "https://example.com",
+				StatusCode:  200,
+				ContentType: "text/html; charset=utf-8",
+				Headers:     http.Header{},
+			},
+			wantCheck: "health/missing-charset",
+			wantIssue: false,
+		},
+		{
+			name: "non-html content type no issue",
+			page: &model.Page{
+				URL:         "https://example.com/image.png",
+				StatusCode:  200,
+				ContentType: "image/png",
+				Headers:     http.Header{},
+			},
+			wantCheck: "health/missing-charset",
+			wantIssue: false,
+		},
 	}
 
 	for _, tt := range tests {

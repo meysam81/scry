@@ -11,6 +11,18 @@ import (
 	"github.com/meysam81/scry/internal/logger"
 )
 
+// newFetcherOrSkip creates a Fetcher for testing, skipping the test if
+// the browser cannot be launched (e.g. missing Chrome/Chromium or libraries).
+func newFetcherOrSkip(t *testing.T, userAgent string) *Fetcher {
+	t.Helper()
+	bf, err := NewFetcher("", userAgent, 30*time.Second, logger.Nop())
+	if err != nil {
+		t.Skipf("browser not available, skipping: %v", err)
+	}
+	t.Cleanup(func() { _ = bf.Close() })
+	return bf
+}
+
 func TestFetcher_BasicFetch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping browser test in short mode")
@@ -23,11 +35,7 @@ func TestFetcher_BasicFetch(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewFetcher("", "test-browser-agent/1.0", 30*time.Second, logger.Nop())
-	if err != nil {
-		t.Fatalf("failed to create Fetcher: %v", err)
-	}
-	defer func() { _ = bf.Close() }()
+	bf := newFetcherOrSkip(t, "test-browser-agent/1.0")
 
 	page, err := bf.Fetch(context.Background(), srv.URL+"/page")
 	if err != nil {
@@ -52,11 +60,7 @@ func TestFetcher_StatusCode(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewFetcher("", "test-agent/1.0", 30*time.Second, logger.Nop())
-	if err != nil {
-		t.Fatalf("failed to create Fetcher: %v", err)
-	}
-	defer func() { _ = bf.Close() }()
+	bf := newFetcherOrSkip(t, "test-agent/1.0")
 
 	page, err := bf.Fetch(context.Background(), srv.URL+"/")
 	if err != nil {
@@ -80,11 +84,7 @@ func TestFetcher_FetchDuration(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewFetcher("", "test-agent/1.0", 30*time.Second, logger.Nop())
-	if err != nil {
-		t.Fatalf("failed to create Fetcher: %v", err)
-	}
-	defer func() { _ = bf.Close() }()
+	bf := newFetcherOrSkip(t, "test-agent/1.0")
 
 	page, err := bf.Fetch(context.Background(), srv.URL+"/")
 	if err != nil {
@@ -111,11 +111,7 @@ func TestFetcher_ContentType(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	bf, err := NewFetcher("", "test-agent/1.0", 30*time.Second, logger.Nop())
-	if err != nil {
-		t.Fatalf("failed to create Fetcher: %v", err)
-	}
-	defer func() { _ = bf.Close() }()
+	bf := newFetcherOrSkip(t, "test-agent/1.0")
 
 	page, err := bf.Fetch(context.Background(), srv.URL+"/")
 	if err != nil {

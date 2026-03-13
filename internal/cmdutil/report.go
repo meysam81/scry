@@ -18,6 +18,11 @@ import (
 // code error if issues exceed the fail-on threshold.
 func ReportAndExit(ctx context.Context, cfg *config.Config, result *model.CrawlResult) error {
 	l := logger.FromContext(ctx)
+
+	if cfg.FilterSeverity != "" || cfg.FilterCategory != "" {
+		result.Issues = report.FilterIssues(result.Issues, cfg.FilterSeverity, cfg.FilterCategory)
+	}
+
 	reporters := report.AllReporters()
 	formats := cfg.OutputFormats()
 

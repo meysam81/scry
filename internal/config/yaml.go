@@ -37,6 +37,11 @@ type YAMLConfig struct {
 		FailOn  *string  `yaml:"fail_on"`
 	} `yaml:"output"`
 
+	Filter struct {
+		Severity *string `yaml:"severity"`
+		Category *string `yaml:"category"`
+	} `yaml:"filter"`
+
 	Lighthouse struct {
 		Enabled  *bool   `yaml:"enabled"`
 		Mode     *string `yaml:"mode"`
@@ -142,6 +147,14 @@ func mergeYAML(cfg *Config, ycfg *YAMLConfig) error {
 	}
 	if ycfg.Output.FailOn != nil && !envSet("SCRY_FAIL_ON") {
 		cfg.FailOn = *ycfg.Output.FailOn
+	}
+
+	// Filter settings.
+	if ycfg.Filter.Severity != nil && !envSet("SCRY_FILTER_SEVERITY") {
+		cfg.FilterSeverity = *ycfg.Filter.Severity
+	}
+	if ycfg.Filter.Category != nil && !envSet("SCRY_FILTER_CATEGORY") {
+		cfg.FilterCategory = *ycfg.Filter.Category
 	}
 
 	// Lighthouse settings.

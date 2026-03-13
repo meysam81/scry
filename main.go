@@ -7,13 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/cmd/check"
 	"github.com/meysam81/scry/cmd/crawl"
 	"github.com/meysam81/scry/cmd/lighthouse"
+	"github.com/meysam81/scry/cmd/validate"
 	"github.com/meysam81/scry/internal/logger"
 )
 
@@ -74,40 +73,21 @@ func main() {
 			crawl.Command(),
 			check.Command(),
 			lighthouse.Command(),
+			validate.Command(),
 		},
 	}
 
 	if err := root.Run(ctx, os.Args); err != nil {
-		log.Fatal().Err(err).Msg("fatal error")
+		logger.FromContext(ctx).Fatal().Err(err).Msg("fatal error")
 	}
 }
 
-// setupLogger configures zerolog based on the --log-level and --log-format flags.
+// setupLogger configures the logger based on the --log-level and --log-format flags.
 func setupLogger(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	format := cmd.String("log-format")
 	level := cmd.String("log-level")
 
-	var zl zerolog.Logger
+	l := logger.Setup(level, format)
 
-	switch format {
-	case "json":
-		zl = zerolog.New(os.Stderr).With().Timestamp().Logger()
-	default:
-		zl = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
-	}
-
-	switch level {
-	case "debug":
-		zl = zl.Level(zerolog.DebugLevel)
-	case "warn":
-		zl = zl.Level(zerolog.WarnLevel)
-	case "error":
-		zl = zl.Level(zerolog.ErrorLevel)
-	default:
-		zl = zl.Level(zerolog.InfoLevel)
-	}
-
-	log.Logger = zl
-
-	return logger.WithContext(ctx, logger.New(zl)), nil
+	return logger.WithContext(ctx, l), nil
 }

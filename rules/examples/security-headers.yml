@@ -1,0 +1,25 @@
+rules:
+  - name: "custom/missing-csp"
+    severity: warning
+    condition: |
+      page.status_code == 200 &&
+      !('content-security-policy' in page.headers)
+    message: "Missing Content-Security-Policy header"
+
+  - name: "custom/missing-hsts"
+    severity: warning
+    match: "https://*"
+    condition: |
+      page.status_code == 200 &&
+      !('strict-transport-security' in page.headers)
+    message: "Missing Strict-Transport-Security header"
+
+  - name: "custom/large-page"
+    severity: info
+    condition: "size(page.body) > 500000"
+    message: "Page body exceeds 500KB"
+
+  - name: "custom/no-links"
+    severity: info
+    condition: "size(page.links) == 0"
+    message: "Page has no outgoing links"

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/internal/cmdutil"
@@ -51,6 +50,8 @@ func Command() *cli.Command {
 }
 
 func runLighthouse(ctx context.Context, cmd *cli.Command) error {
+	l := logger.FromContext(ctx)
+
 	cfg, err := config.LoadWithFile(cmd.String("config"))
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
@@ -68,7 +69,7 @@ func runLighthouse(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Create the runner.
-	runner, err := lh.NewRunner(cfg, logger.FromContext(ctx))
+	runner, err := lh.NewRunner(cfg, l)
 	if err != nil {
 		return fmt.Errorf("create lighthouse runner: %w", err)
 	}
@@ -77,14 +78,14 @@ func runLighthouse(ctx context.Context, cmd *cli.Command) error {
 	start := time.Now()
 	var results []model.LighthouseResult
 	for _, u := range urls {
-		log.Info().Str("url", u).Msg("running lighthouse audit")
+		l.Info().Str("url", u).Msg("running lighthouse audit")
 		result, err := runner.Run(ctx, u)
 		if err != nil {
-			log.Warn().Err(err).Str("url", u).Msg("lighthouse audit failed, skipping")
+			l.Warn().Err(err).Str("url", u).Msg("lighthouse audit failed, skipping")
 			continue
 		}
 		results = append(results, *result)
-		log.Info().
+		l.Info().
 			Str("url", u).
 			Float64("perf", result.PerformanceScore).
 			Float64("a11y", result.AccessibilityScore).

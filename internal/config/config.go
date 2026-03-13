@@ -40,6 +40,21 @@ type Config struct {
 	LogLevel  string `env:"SCRY_LOG_LEVEL"  envDefault:"info"`
 	LogFormat string `env:"SCRY_LOG_FORMAT" envDefault:"pretty"`
 
+	// Filtering.
+	FilterSeverity string `env:"SCRY_FILTER_SEVERITY" envDefault:""`
+	FilterCategory string `env:"SCRY_FILTER_CATEGORY" envDefault:""`
+
+	// Parallel domains.
+	ParallelDomains int `env:"SCRY_PARALLEL_DOMAINS" envDefault:"3"`
+
+	// Metrics.
+	MetricsPushURL string `env:"SCRY_METRICS_PUSH_URL" envDefault:""`
+
+	// Checkpoint / Incremental.
+	CheckpointFile  string `env:"SCRY_CHECKPOINT_FILE"  envDefault:""`
+	ResumeFile      string `env:"SCRY_RESUME_FILE"      envDefault:""`
+	IncrementalFile string `env:"SCRY_INCREMENTAL_FILE" envDefault:""`
+
 	// CLI-only fields (not from env).
 	IncludePatterns []string `env:"-"`
 	ExcludePatterns []string `env:"-"`
@@ -52,6 +67,10 @@ var validOutputFormats = map[string]bool{
 	"csv":      true,
 	"markdown": true,
 	"html":     true,
+	"sarif":    true,
+	"junit":    true,
+	"jsonl":    true,
+	"pdf":      true,
 }
 
 // Load parses environment variables into a Config and validates it.
@@ -94,6 +113,9 @@ func (c *Config) validate() error {
 	}
 	if c.RateLimit < 1 {
 		return fmt.Errorf("validate config: rate limit must be >= 1, got %d", c.RateLimit)
+	}
+	if c.ParallelDomains < 1 {
+		return fmt.Errorf("validate config: parallel domains must be >= 1, got %d", c.ParallelDomains)
 	}
 	if c.RequestTimeout <= 0 {
 		return fmt.Errorf("validate config: request timeout must be > 0, got %s", c.RequestTimeout)

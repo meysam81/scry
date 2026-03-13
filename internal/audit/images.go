@@ -12,6 +12,9 @@ import (
 	"golang.org/x/net/html"
 )
 
+// legacyImageExts lists file extensions considered legacy image formats.
+var legacyImageExts = []string{".jpg", ".jpeg", ".gif", ".bmp", ".tiff"}
+
 const maxImageSize = 500 * 1024
 
 // ImageChecker analyses pages for image-related issues.
@@ -46,9 +49,13 @@ func (c *ImageChecker) Check(ctx context.Context, page *model.Page) []model.Issu
 	var issues []model.Issue
 	imgs := findNodes(doc, "img")
 
-	for _, img := range imgs {
+	for i, img := range imgs {
 		issues = append(issues, c.checkAlt(img, page.URL)...)
 		issues = append(issues, c.checkRemoteImage(ctx, img, page.URL)...)
+		issues = append(issues, c.checkLegacyFormat(img, page.URL)...)
+		issues = append(issues, c.checkMissingLazyLoading(img, page.URL, i)...)
+		issues = append(issues, c.checkMissingDimensions(img, page.URL)...)
+		issues = append(issues, c.checkMissingResponsive(img, page.URL)...)
 	}
 
 	return issues
@@ -98,7 +105,11 @@ func (c *ImageChecker) checkRemoteImage(ctx context.Context, img *html.Node, pag
 	if err != nil {
 		return nil
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			auditLogger.Warn().Err(cerr).Str("url", src).Msg("resp body close failed")
+		}
+	}()
 
 	var issues []model.Issue
 
@@ -131,4 +142,102 @@ func hasAnchorAncestor(n *html.Node) bool {
 		}
 	}
 	return false
+}
+
+// hasAncestorTag walks up the node tree to check if any ancestor matches the given tag.
+func hasAncestorTag(n *html.Node, tag string) bool {
+	for p := n.Parent; p != nil; p = p.Parent {
+		if p.Type == html.ElementNode && p.Data == tag {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *ImageChecker) checkLegacyFormat(img *html.Node, pageURL string) []model.Issue {
+	src, _ := getAttr(img, "src")
+	if src == "" {
+		return nil
+	}
+	lower := strings.ToLower(src)
+	// Strip query string and fragment before checking extension.
+	if idx := strings.IndexAny(lower, "?#"); idx != -1 {
+		lower = lower[:idx]
+	}
+	for _, ext := range legacyImageExts {
+		if strings.HasSuffix(lower, ext) {
+			return []model.Issue{{
+				CheckName: "images/legacy-format",
+				Severity:  model.SeverityInfo,
+				URL:       pageURL,
+				Message:   fmt.Sprintf("image uses legacy format (%s), consider WebP or AVIF: %s", ext, src),
+			}}
+		}
+	}
+	return nil
+}
+
+func (c *ImageChecker) checkMissingLazyLoading(img *html.Node, pageURL string, index int) []model.Issue {
+	// Skip above-the-fold images: first 3 images or images inside <header>.
+	if index < 3 || hasAncestorTag(img, "header") {
+		return nil
+	}
+
+	loading, _ := getAttr(img, "loading")
+	if strings.EqualFold(loading, "lazy") {
+		return nil
+	}
+
+	src, _ := getAttr(img, "src")
+	return []model.Issue{{
+		CheckName: "images/missing-lazy-loading",
+		Severity:  model.SeverityInfo,
+		URL:       pageURL,
+		Message:   fmt.Sprintf("image is missing loading=\"lazy\" attribute: %s", src),
+	}}
+}
+
+func (c *ImageChecker) checkMissingDimensions(img *html.Node, pageURL string) []model.Issue {
+	_, hasWidth := getAttr(img, "width")
+	_, hasHeight := getAttr(img, "height")
+
+	// Only flag if both are missing.
+	if hasWidth || hasHeight {
+		return nil
+	}
+
+	src, _ := getAttr(img, "src")
+	return []model.Issue{{
+		CheckName: "images/missing-dimensions",
+		Severity:  model.SeverityWarning,
+		URL:       pageURL,
+		Message:   fmt.Sprintf("image is missing width and height attributes: %s", src),
+	}}
+}
+
+func (c *ImageChecker) checkMissingResponsive(img *html.Node, pageURL string) []model.Issue {
+	src, _ := getAttr(img, "src")
+	if !strings.HasPrefix(src, "http") {
+		return nil
+	}
+
+	// Skip small decorative images (empty alt + role="presentation").
+	alt, _ := getAttr(img, "alt")
+	role, _ := getAttr(img, "role")
+	if alt == "" && role == "presentation" {
+		return nil
+	}
+
+	_, hasSrcset := getAttr(img, "srcset")
+	_, hasSizes := getAttr(img, "sizes")
+	if hasSrcset || hasSizes {
+		return nil
+	}
+
+	return []model.Issue{{
+		CheckName: "images/missing-responsive",
+		Severity:  model.SeverityInfo,
+		URL:       pageURL,
+		Message:   fmt.Sprintf("image is missing srcset and sizes attributes: %s", src),
+	}}
 }

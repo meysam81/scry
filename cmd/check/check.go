@@ -4,9 +4,9 @@ package check
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/internal/audit"
@@ -63,12 +63,34 @@ func Command() *cli.Command {
 				Value: "scry/1.0",
 				Usage: "HTTP user-agent string",
 			},
+			&cli.StringFlag{
+				Name:  "filter-severity",
+				Value: "",
+				Usage: "comma-separated severity filter (e.g. critical,warning)",
+			},
+			&cli.StringFlag{
+				Name:  "filter-category",
+				Value: "",
+				Usage: "comma-separated category filter (e.g. seo,performance)",
+			},
+			&cli.BoolFlag{
+				Name:  "watch",
+				Value: false,
+				Usage: "re-run check on interval",
+			},
+			&cli.DurationFlag{
+				Name:  "watch-interval",
+				Value: 30 * time.Second,
+				Usage: "watch interval",
+			},
 		},
 		Action: runCheck,
 	}
 }
 
 func runCheck(ctx context.Context, cmd *cli.Command) error {
+	l := logger.FromContext(ctx)
+
 	cfg, err := config.LoadWithFile(cmd.String("config"))
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
@@ -83,27 +105,59 @@ func runCheck(ctx context.Context, cmd *cli.Command) error {
 	targetURL = cmdutil.NormalizeURL(targetURL)
 
 	// Create fetcher.
-	fetcher, cleanup, err := crawler.NewFetcher(cfg, logger.FromContext(ctx))
+	fetcher, cleanup, err := crawler.NewFetcher(cfg, l)
 	if err != nil {
 		return fmt.Errorf("create fetcher: %w", err)
 	}
 	defer cleanup()
 
-	// Fetch the single URL.
-	log.Info().Str("url", targetURL).Msg("fetching URL")
+	// Run the check once.
+	if err := runSingleCheck(ctx, cfg, fetcher, targetURL); err != nil {
+		return err
+	}
+
+	// If watch mode is enabled, re-run on interval.
+	if cmd.Bool("watch") {
+		interval := cmd.Duration("watch-interval")
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-ticker.C:
+				// Clear screen.
+				if _, err := os.Stdout.WriteString("\033[2J\033[H"); err != nil {
+					l.Warn().Err(err).Msg("failed to clear screen")
+				}
+				if err := runSingleCheck(ctx, cfg, fetcher, targetURL); err != nil {
+					l.Error().Err(err).Msg("watch iteration failed")
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// runSingleCheck performs a single fetch + audit cycle and writes reports.
+func runSingleCheck(ctx context.Context, cfg *config.Config, fetcher crawler.Fetcher, targetURL string) error {
+	l := logger.FromContext(ctx)
+
+	l.Info().Str("url", targetURL).Msg("fetching URL")
 	start := time.Now()
 	page, err := fetcher.Fetch(ctx, targetURL)
 	if err != nil {
 		return cli.Exit(fmt.Sprintf("fetch failed: %v", err), 2)
 	}
 	duration := time.Since(start)
-	log.Info().Int("status", page.StatusCode).Dur("duration", page.FetchDuration).Msg("fetch complete")
+	l.Info().Int("status", page.StatusCode).Dur("duration", page.FetchDuration).Msg("fetch complete")
 
 	// Run audit checks.
-	log.Info().Msg("running audit checks")
-	registry := audit.DefaultRegistry(logger.FromContext(ctx))
+	l.Info().Msg("running audit checks")
+	registry := audit.DefaultRegistry(l)
 	issues := registry.RunAll(ctx, []*model.Page{page})
-	log.Info().Int("issues", len(issues)).Msg("audit complete")
+	l.Info().Int("issues", len(issues)).Msg("audit complete")
 
 	// Wrap in CrawlResult for reporter compatibility.
 	result := &model.CrawlResult{
@@ -142,6 +196,12 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	}
 	if cmd.IsSet("user-agent") {
 		cfg.UserAgent = cmd.String("user-agent")
+	}
+	if cmd.IsSet("filter-severity") {
+		cfg.FilterSeverity = cmd.String("filter-severity")
+	}
+	if cmd.IsSet("filter-category") {
+		cfg.FilterCategory = cmd.String("filter-category")
 	}
 
 	cmdutil.ApplyGlobalOverrides(cmd, cfg)

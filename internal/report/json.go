@@ -9,6 +9,12 @@ import (
 	"github.com/meysam81/scry/internal/model"
 )
 
+// jsonOutput wraps CrawlResult with summary statistics for the JSON reporter.
+type jsonOutput struct {
+	*model.CrawlResult
+	Summary SummaryStats `json:"summary"`
+}
+
 // JSONReporter writes the CrawlResult as pretty-printed JSON.
 type JSONReporter struct{}
 
@@ -20,7 +26,13 @@ func (r *JSONReporter) Write(_ context.Context, result *model.CrawlResult, w io.
 	if result == nil {
 		return nil
 	}
-	data, err := json.MarshalIndent(result, "", "  ")
+
+	output := jsonOutput{
+		CrawlResult: result,
+		Summary:     ComputeSummary(result),
+	}
+
+	data, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshalling crawl result to JSON: %w", err)
 	}

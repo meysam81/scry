@@ -48,6 +48,12 @@ func DefaultRegistry(l logger.Logger) *Registry {
 	r.Register(NewLinkChecker())
 	r.Register(NewPerformanceChecker())
 	r.Register(NewStructuredDataChecker())
+	r.Register(NewSecurityChecker())
+	r.Register(NewAccessibilityChecker())
+	r.Register(NewHreflangChecker())
+	r.Register(NewExternalLinkChecker())
+	r.Register(NewTLSChecker())
+	r.Register(NewDeepStructuredDataChecker())
 	return r
 }
 

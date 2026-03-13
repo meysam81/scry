@@ -1,0 +1,11 @@
+website-audit:
+  image: golang:latest
+  script:
+    - go install github.com/meysam81/scry@latest
+    - scry crawl $AUDIT_URL --output terminal,json --output-file audit-report --fail-on critical
+  artifacts:
+    paths:
+      - audit-report.*
+    when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"

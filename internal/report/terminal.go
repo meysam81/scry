@@ -91,6 +91,37 @@ func (r *TerminalReporter) Write(_ context.Context, result *model.CrawlResult, w
 		return fmt.Errorf("writing severity table: %w", err)
 	}
 
+	// By Category table.
+	summary := ComputeSummary(result)
+	if len(summary.ByCategory) > 0 {
+		if _, err := fmt.Fprintln(w); err != nil {
+			return fmt.Errorf("writing newline: %w", err)
+		}
+		if _, err := fmt.Fprintln(w, titleStyle.Render("-- By Category --")); err != nil {
+			return fmt.Errorf("writing category heading: %w", err)
+		}
+		if _, err := fmt.Fprintln(w); err != nil {
+			return fmt.Errorf("writing newline: %w", err)
+		}
+
+		// Sort categories for deterministic output.
+		categories := make([]string, 0, len(summary.ByCategory))
+		for cat := range summary.ByCategory {
+			categories = append(categories, cat)
+		}
+		sort.Strings(categories)
+
+		catTable := table.NewWriter()
+		catTable.SetStyle(table.StyleLight)
+		catTable.AppendHeader(table.Row{"Category", "Count"})
+		for _, cat := range categories {
+			catTable.AppendRow(table.Row{cat, summary.ByCategory[cat]})
+		}
+		if _, err := fmt.Fprintln(w, catTable.Render()); err != nil {
+			return fmt.Errorf("writing category table: %w", err)
+		}
+	}
+
 	// Issue sections in severity order.
 	order := []struct {
 		sev   model.Severity

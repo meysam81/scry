@@ -8,8 +8,8 @@ import (
 
 // FrontierTask represents a URL to be crawled along with its depth from the seed.
 type FrontierTask struct {
-	URL   string
-	Depth int
+	URL   string `json:"url"`
+	Depth int    `json:"depth"`
 }
 
 // Frontier is a thread-safe BFS queue with deduplication and scope enforcement.
