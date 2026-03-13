@@ -49,14 +49,15 @@ var checkPrefixToCategory = map[string]string{
 }
 
 // deduction returns the point deduction for a given severity.
+// Weights match the Prometheus metrics push (critical=10, warning=3, info=1).
 func deduction(s model.Severity) float64 {
 	switch s {
 	case model.SeverityCritical:
-		return 5
+		return 10
 	case model.SeverityWarning:
-		return 2
+		return 3
 	case model.SeverityInfo:
-		return 0.5
+		return 1
 	default:
 		return 0
 	}
@@ -77,7 +78,7 @@ func categoryFromCheckName(checkName string) string {
 
 // ComputeScore calculates a 0-100 aggregate health score from the issues in a
 // CrawlResult. The overall score starts at 100 and is decremented per issue
-// (critical=-5, warning=-2, info=-0.5), floored at 0. Category scores are
+// (critical=-10, warning=-3, info=-1), floored at 0. Category scores are
 // computed independently using the same algorithm.
 func ComputeScore(result *model.CrawlResult) *ScoreResult {
 	sr := &ScoreResult{

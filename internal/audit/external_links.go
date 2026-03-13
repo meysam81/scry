@@ -96,14 +96,19 @@ func (c *ExternalLinkChecker) CheckSite(ctx context.Context, pages []*model.Page
 		urls = append(urls, u)
 	}
 
-	// Per-domain rate limiters.
+	// Per-domain rate limiters with a cap to prevent unbounded memory growth.
+	const maxDomainLimiters = 10000
 	var limiterMu sync.Mutex
 	limiters := make(map[string]*rate.Limiter)
+	fallbackLimiter := rate.NewLimiter(rate.Limit(externalLinkRatePerSec), 1)
 	getLimiter := func(host string) *rate.Limiter {
 		limiterMu.Lock()
 		defer limiterMu.Unlock()
 		if l, ok := limiters[host]; ok {
 			return l
+		}
+		if len(limiters) >= maxDomainLimiters {
+			return fallbackLimiter
 		}
 		l := rate.NewLimiter(rate.Limit(externalLinkRatePerSec), 1)
 		limiters[host] = l
@@ -224,7 +229,7 @@ func (c *ExternalLinkChecker) checkExternalURL(ctx context.Context, targetURL st
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {
-			auditLogger.Warn().Err(cerr).Str("url", targetURL).Msg("resp body close failed")
+			getAuditLogger().Warn().Err(cerr).Str("url", targetURL).Msg("resp body close failed")
 		}
 	}()
 
@@ -245,7 +250,7 @@ func (c *ExternalLinkChecker) checkExternalURL(ctx context.Context, targetURL st
 		}
 		defer func() {
 			if cerr := resp2.Body.Close(); cerr != nil {
-				auditLogger.Warn().Err(cerr).Str("url", targetURL).Msg("resp body close failed")
+				getAuditLogger().Warn().Err(cerr).Str("url", targetURL).Msg("resp body close failed")
 			}
 		}()
 

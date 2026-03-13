@@ -98,6 +98,9 @@ func (f *Fetcher) Fetch(ctx context.Context, u string) (*model.Page, error) {
 	}
 
 	// Set up response listener before navigation.
+	// The goroutine spawned by page.EachEvent is tied to the page's context
+	// and will be cleaned up when page.Close() is called via the deferred
+	// close above — no separate cancellation is needed.
 	done := make(chan struct{}, 1)
 	go page.EachEvent(func(e *proto.NetworkResponseReceived) {
 		// Capture the status from the main document response (type Document).

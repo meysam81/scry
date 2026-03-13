@@ -25,8 +25,6 @@ func TestAllReportersContainsExpectedEntries(t *testing.T) {
 
 func TestAllReportersImplementInterface(t *testing.T) {
 	for name, r := range AllReporters() {
-		// Verify the concrete value satisfies Reporter.
-		_ = Reporter(r)
 		if r.Name() == "" {
 			t.Errorf("reporter %q returned empty Name()", name)
 		}

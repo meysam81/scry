@@ -3,16 +3,34 @@ package audit
 import (
 	"bytes"
 	"crypto/sha256"
+	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 	"golang.org/x/net/html"
 )
 
-// auditLogger is set via SetLogger before checks run.
-var auditLogger = logger.Nop()
+// auditLoggerPtr stores the logger atomically to avoid data races.
+// It is set once via setAuditLogger before checks run.
+var auditLoggerPtr atomic.Pointer[logger.Logger]
+
+func init() {
+	l := logger.Nop()
+	auditLoggerPtr.Store(&l)
+}
+
+// setAuditLogger atomically sets the audit logger.
+func setAuditLogger(l logger.Logger) {
+	auditLoggerPtr.Store(&l)
+}
+
+// getAuditLogger atomically loads the audit logger.
+func getAuditLogger() logger.Logger {
+	return *auditLoggerPtr.Load()
+}
 
 // docCache caches parsed HTML documents keyed by the body content hash.
 var docCache sync.Map
@@ -29,7 +47,7 @@ func clearDocCache() {
 func parseHTMLDocLog(body []byte, pageURL string) *html.Node {
 	doc, err := parseHTMLDoc(body)
 	if err != nil {
-		auditLogger.Warn().Err(err).Str("url", pageURL).Msg("html parse failed")
+		getAuditLogger().Warn().Err(err).Str("url", pageURL).Msg("html parse failed")
 		return nil
 	}
 	return doc
@@ -40,7 +58,11 @@ func parseHTMLDocLog(body []byte, pageURL string) *html.Node {
 func parseHTMLDoc(body []byte) (*html.Node, error) {
 	key := sha256.Sum256(body)
 	if cached, ok := docCache.Load(key); ok {
-		return cached.(*html.Node), nil
+		node, ok := cached.(*html.Node)
+		if !ok {
+			return nil, fmt.Errorf("docCache: unexpected type %T", cached)
+		}
+		return node, nil
 	}
 	doc, err := html.Parse(bytes.NewReader(body))
 	if err != nil {

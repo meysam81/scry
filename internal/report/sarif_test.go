@@ -123,8 +123,8 @@ func TestSARIFReporterToolDriver(t *testing.T) {
 	if driver.Name != "scry" {
 		t.Errorf("driver.name = %q, want %q", driver.Name, "scry")
 	}
-	if driver.Version != "1.0.0" {
-		t.Errorf("driver.version = %q, want %q", driver.Version, "1.0.0")
+	if driver.Version != "dev" {
+		t.Errorf("driver.version = %q, want %q", driver.Version, "dev")
 	}
 	if driver.InformationURI != "https://github.com/meysam81/scry" {
 		t.Errorf("driver.informationUri = %q, want %q", driver.InformationURI, "https://github.com/meysam81/scry")

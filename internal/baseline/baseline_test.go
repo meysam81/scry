@@ -310,3 +310,53 @@ func TestDiffSameURLDifferentCheck(t *testing.T) {
 		t.Errorf("len(Existing) = %d, want 0", len(diff.Existing))
 	}
 }
+
+func TestDiffDuplicateIssues(t *testing.T) {
+	// Baseline has 2 copies of the same issue; current has 1.
+	// Expected: 1 existing, 1 resolved, 0 new.
+	issueA := issue("check-a", "https://example.com/1")
+
+	bl := &Baseline{
+		SeedURL: "https://example.com",
+		Issues:  []model.Issue{issueA, issueA},
+	}
+
+	current := crawlResult("https://example.com", issueA)
+
+	diff := Diff(bl, current)
+
+	if len(diff.Existing) != 1 {
+		t.Errorf("len(Existing) = %d, want 1", len(diff.Existing))
+	}
+	if len(diff.Resolved) != 1 {
+		t.Errorf("len(Resolved) = %d, want 1", len(diff.Resolved))
+	}
+	if len(diff.New) != 0 {
+		t.Errorf("len(New) = %d, want 0", len(diff.New))
+	}
+}
+
+func TestDiffDuplicateIssuesReverse(t *testing.T) {
+	// Baseline has 1 copy; current has 2 copies.
+	// Expected: 1 existing, 0 resolved, 1 new.
+	issueA := issue("check-a", "https://example.com/1")
+
+	bl := &Baseline{
+		SeedURL: "https://example.com",
+		Issues:  []model.Issue{issueA},
+	}
+
+	current := crawlResult("https://example.com", issueA, issueA)
+
+	diff := Diff(bl, current)
+
+	if len(diff.Existing) != 1 {
+		t.Errorf("len(Existing) = %d, want 1", len(diff.Existing))
+	}
+	if len(diff.Resolved) != 0 {
+		t.Errorf("len(Resolved) = %d, want 0", len(diff.Resolved))
+	}
+	if len(diff.New) != 1 {
+		t.Errorf("len(New) = %d, want 1", len(diff.New))
+	}
+}

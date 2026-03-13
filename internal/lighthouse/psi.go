@@ -100,7 +100,10 @@ func (c *PSIClient) Run(ctx context.Context, targetURL string) (*model.Lighthous
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		if readErr != nil {
+			return nil, fmt.Errorf("psi api returned status %d (body read failed: %w)", resp.StatusCode, readErr)
+		}
 		return nil, fmt.Errorf("psi api returned status %d: %s", resp.StatusCode, body)
 	}
 

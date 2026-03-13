@@ -107,7 +107,7 @@ func (c *ImageChecker) checkRemoteImage(ctx context.Context, img *html.Node, pag
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {
-			auditLogger.Warn().Err(cerr).Str("url", src).Msg("resp body close failed")
+			getAuditLogger().Warn().Err(cerr).Str("url", src).Msg("resp body close failed")
 		}
 	}()
 

@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -51,7 +52,7 @@ func (c *TLSChecker) Check(ctx context.Context, page *model.Page) []model.Issue 
 	}
 
 	parsed, err := url.Parse(page.URL)
-	if err != nil || strings.ToLower(parsed.Scheme) != "https" {
+	if err != nil || !strings.EqualFold(parsed.Scheme, "https") {
 		return nil
 	}
 
@@ -62,7 +63,10 @@ func (c *TLSChecker) Check(ctx context.Context, page *model.Page) []model.Issue 
 
 	// Return cached result if available.
 	if cached, ok := c.cache.Load(hostname); ok {
-		entry := cached.(tlsCacheEntry)
+		entry, ok := cached.(tlsCacheEntry)
+		if !ok {
+			return nil
+		}
 		return rewriteURL(entry.issues, page.URL)
 	}
 
@@ -89,7 +93,11 @@ func (c *TLSChecker) inspectTLS(_ context.Context, hostname, addr, pageURL strin
 	if err != nil {
 		return nil // can't connect; not a TLS-specific issue
 	}
-	defer func() { _ = conn.Close() }()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			getAuditLogger().Warn().Err(err).Str("addr", addr).Msg("tls conn close failed")
+		}
+	}()
 
 	state := conn.ConnectionState()
 	var issues []model.Issue
@@ -164,7 +172,7 @@ func isSelfSigned(cert *x509.Certificate) bool {
 	}
 	// If authority and subject key identifiers are both present, they must match.
 	if len(cert.AuthorityKeyId) > 0 && len(cert.SubjectKeyId) > 0 {
-		return string(cert.AuthorityKeyId) == string(cert.SubjectKeyId)
+		return bytes.Equal(cert.AuthorityKeyId, cert.SubjectKeyId)
 	}
 	return true
 }

@@ -70,34 +70,47 @@ func Load(path string) (*Baseline, error) {
 
 // Diff compares a baseline snapshot against a current crawl result and
 // classifies every issue as new, resolved, or existing.
+// Duplicate issues (same CheckName+URL) are handled via count-based matching:
+// if baseline has N copies and current has M copies, min(N,M) are existing,
+// (M-N) are new (if M>N), and (N-M) are resolved (if N>M).
 func Diff(baseline *Baseline, current *model.CrawlResult) *DiffResult {
 	result := &DiffResult{}
 
-	// Index baseline issues by key. When multiple issues share the same key
-	// (shouldn't normally happen), we track a count so that duplicates are
-	// handled correctly.
-	baselineIndex := make(map[string]int, len(baseline.Issues))
+	// Count baseline issues by key.
+	baselineCounts := make(map[string]int, len(baseline.Issues))
 	for _, issue := range baseline.Issues {
-		baselineIndex[issueKey(issue)]++
+		baselineCounts[issueKey(issue)]++
 	}
 
-	// Walk current issues: if the key exists in the baseline, it is existing;
-	// otherwise it is new.
-	currentIndex := make(map[string]int, len(current.Issues))
+	// Walk current issues and decrement baseline counts.
+	// If baseline count > 0 the issue is existing; otherwise it is new.
+	remaining := make(map[string]int, len(baselineCounts))
+	for k, v := range baselineCounts {
+		remaining[k] = v
+	}
+
 	for _, issue := range current.Issues {
 		key := issueKey(issue)
-		currentIndex[key]++
-
-		if baselineIndex[key] > 0 {
+		if remaining[key] > 0 {
+			remaining[key]--
 			result.Existing = append(result.Existing, issue)
 		} else {
 			result.New = append(result.New, issue)
 		}
 	}
 
-	// Walk baseline issues: anything not present in the current set is resolved.
+	// Any remaining baseline counts > 0 are resolved issues.
+	// We need to walk baseline issues to preserve their original data.
+	resolved := make(map[string]int, len(remaining))
+	for k, v := range remaining {
+		if v > 0 {
+			resolved[k] = v
+		}
+	}
 	for _, issue := range baseline.Issues {
-		if currentIndex[issueKey(issue)] == 0 {
+		key := issueKey(issue)
+		if resolved[key] > 0 {
+			resolved[key]--
 			result.Resolved = append(result.Resolved, issue)
 		}
 	}

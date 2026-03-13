@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 )
 
@@ -18,7 +19,7 @@ func TestEvaluate_StatusCode(t *testing.T) {
 			Condition: "page.status_code >= 400",
 			Message:   "Page returned client error",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -53,7 +54,7 @@ func TestEvaluate_StatusCode_NoMatch(t *testing.T) {
 			Condition: "page.status_code >= 400",
 			Message:   "Page returned client error",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -77,7 +78,7 @@ func TestEvaluate_MissingHeader(t *testing.T) {
 			Condition: "!('content-security-policy' in page.headers)",
 			Message:   "Missing CSP header",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -106,7 +107,7 @@ func TestEvaluate_HeaderPresent(t *testing.T) {
 			Condition: "!('content-security-policy' in page.headers)",
 			Message:   "Missing CSP header",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -133,7 +134,7 @@ func TestEvaluate_BodyContains(t *testing.T) {
 			Condition: "!page.body.contains('<title>')",
 			Message:   "Missing title tag",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -166,7 +167,7 @@ func TestEvaluate_EmptyLinks(t *testing.T) {
 			Condition: "size(page.links) == 0",
 			Message:   "No outgoing links",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -198,7 +199,7 @@ func TestEvaluate_URLMatchPattern(t *testing.T) {
 			Condition: "page.status_code == 200",
 			Message:   "HTTPS page found",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -231,7 +232,7 @@ func TestEvaluate_MatchWildcardAndEmpty(t *testing.T) {
 				Condition: "true",
 				Message:   "always fires",
 			},
-		})
+		}, logger.Nop())
 		if err != nil {
 			t.Fatalf("NewEngine(match=%q): %v", pattern, err)
 		}
@@ -252,7 +253,7 @@ func TestNewEngine_InvalidCEL(t *testing.T) {
 			Condition: "this is not valid CEL !!!",
 			Message:   "should not compile",
 		},
-	})
+	}, logger.Nop())
 	if err == nil {
 		t.Fatal("expected error for invalid CEL expression, got nil")
 	}
@@ -267,7 +268,7 @@ func TestNewEngine_InvalidGlob(t *testing.T) {
 			Condition: "true",
 			Message:   "bad glob",
 		},
-	})
+	}, logger.Nop())
 	if err == nil {
 		t.Fatal("expected error for invalid glob pattern, got nil")
 	}
@@ -293,7 +294,7 @@ func TestEvaluate_MultipleRules(t *testing.T) {
 			Condition: "page.fetch_duration_ms < 100",
 			Message:   "Fast page",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -330,7 +331,7 @@ func TestEvaluate_InSitemap(t *testing.T) {
 			Condition: "!page.in_sitemap",
 			Message:   "Not in sitemap",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -361,7 +362,7 @@ func TestEvaluate_FetchDuration(t *testing.T) {
 			Condition: "page.fetch_duration_ms > 2000",
 			Message:   "Slow page",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -392,7 +393,7 @@ func TestEvaluate_NilHeaders(t *testing.T) {
 			Condition: "!('x-custom' in page.headers)",
 			Message:   "Missing custom header",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -417,7 +418,7 @@ func TestEvaluate_BodySize(t *testing.T) {
 			Condition: "size(page.body) > 100",
 			Message:   "Large page",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -444,7 +445,7 @@ func TestRuleCount(t *testing.T) {
 	engine, err := NewEngine([]Rule{
 		{Name: "a", Severity: "info", Condition: "true", Message: "a"},
 		{Name: "b", Severity: "info", Condition: "true", Message: "b"},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}
@@ -462,7 +463,7 @@ func TestRuleChecker_Interface(t *testing.T) {
 			Condition: "true",
 			Message:   "always",
 		},
-	})
+	}, logger.Nop())
 	if err != nil {
 		t.Fatalf("NewEngine: %v", err)
 	}

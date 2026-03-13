@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	"strings"
 	"testing"
 	"time"
 
@@ -164,5 +165,60 @@ func TestCSVReporterAllFieldsPresent(t *testing.T) {
 		if row[c.col] != c.want {
 			t.Errorf("%s (col %d) = %q, want %q", c.name, c.col, row[c.col], c.want)
 		}
+	}
+}
+
+func TestSanitizeCSVCell(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"hello", "hello"},
+		{"", ""},
+		{"=cmd|'/C calc'!A0", "\t=cmd|'/C calc'!A0"},
+		{"+cmd|'/C calc'!A0", "\t+cmd|'/C calc'!A0"},
+		{"-cmd|'/C calc'!A0", "\t-cmd|'/C calc'!A0"},
+		{"@SUM(A1:A2)", "\t@SUM(A1:A2)"},
+		{"\tcmd", "\t\tcmd"},
+		{"\rcmd", "\t\rcmd"},
+		{"normal text", "normal text"},
+		{"https://example.com", "https://example.com"},
+	}
+	for _, tt := range tests {
+		got := sanitizeCSVCell(tt.input)
+		if got != tt.want {
+			t.Errorf("sanitizeCSVCell(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestCSVReporter_FormulaInjection(t *testing.T) {
+	result := &model.CrawlResult{
+		Issues: []model.Issue{
+			{
+				URL:       "https://example.com",
+				Severity:  model.SeverityWarning,
+				CheckName: "test/check",
+				Message:   "=cmd|'/C calc'!A0",
+				Detail:    "+malicious",
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	r := &CSVReporter{}
+	if err := r.Write(context.Background(), result, &buf); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	lines := strings.Split(buf.String(), "\n")
+	if len(lines) < 2 {
+		t.Fatal("expected at least 2 lines (header + data)")
+	}
+
+	// The message and detail fields should be sanitized.
+	dataLine := lines[1]
+	if strings.Contains(dataLine, "=cmd") && !strings.Contains(dataLine, "\t=cmd") {
+		t.Errorf("formula not sanitized in CSV output: %s", dataLine)
 	}
 }

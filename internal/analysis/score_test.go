@@ -50,21 +50,19 @@ func TestComputeScore_OnlyInfoIssues(t *testing.T) {
 	cr := makeCrawlResult(issues, 3)
 	sr := ComputeScore(cr)
 
-	// 3 info issues = 3 * 0.5 = 1.5 deduction → round(98.5) = 99 (actually 98, let's compute)
-	// 100 - 1.5 = 98.5, round = 98 or 99? math.Round(98.5) = 98 (banker's rounding in some, but Go rounds .5 up)
-	// Go math.Round(98.5) = 99
-	expected := 99
+	// 3 info issues = 3 * 1 = 3 deduction → 100 - 3 = 97
+	expected := 97
 	if sr.Overall != expected {
 		t.Errorf("expected overall %d with 3 info issues, got %d", expected, sr.Overall)
 	}
 
-	// SEO: 2 info = 1.0 deduction → 99
-	if sr.Categories["seo"] != 99 {
-		t.Errorf("expected seo category 99, got %d", sr.Categories["seo"])
+	// SEO: 2 info = 2 deduction → 98
+	if sr.Categories["seo"] != 98 {
+		t.Errorf("expected seo category 98, got %d", sr.Categories["seo"])
 	}
-	// Health: 1 info = 0.5 deduction → round(99.5) = 100
-	if sr.Categories["health"] != 100 {
-		t.Errorf("expected health category 100, got %d", sr.Categories["health"])
+	// Health: 1 info = 1 deduction → 99
+	if sr.Categories["health"] != 99 {
+		t.Errorf("expected health category 99, got %d", sr.Categories["health"])
 	}
 }
 
@@ -79,7 +77,7 @@ func TestComputeScore_ManyCritical_NearZero(t *testing.T) {
 	cr := makeCrawlResult(issues, 10)
 	sr := ComputeScore(cr)
 
-	// 25 critical = 25 * 5 = 125 deduction → 100 - 125 = -25, floored at 0
+	// 25 critical = 25 * 10 = 250 deduction → 100 - 250 = -150, floored at 0
 	if sr.Overall != 0 {
 		t.Errorf("expected overall 0 with 25 critical issues, got %d", sr.Overall)
 	}
@@ -123,41 +121,41 @@ func TestComputeScore_CategoryBreakdown(t *testing.T) {
 	cr := makeCrawlResult(issues, 10)
 	sr := ComputeScore(cr)
 
-	// SEO: 1 critical (5) + 1 warning (2) = 7 → 93
-	if sr.Categories["seo"] != 93 {
-		t.Errorf("expected seo 93, got %d", sr.Categories["seo"])
+	// SEO: 1 critical (10) + 1 warning (3) = 13 → 87
+	if sr.Categories["seo"] != 87 {
+		t.Errorf("expected seo 87, got %d", sr.Categories["seo"])
 	}
-	// Health: 1 critical = 5 → 95
-	if sr.Categories["health"] != 95 {
-		t.Errorf("expected health 95, got %d", sr.Categories["health"])
+	// Health: 1 critical = 10 → 90
+	if sr.Categories["health"] != 90 {
+		t.Errorf("expected health 90, got %d", sr.Categories["health"])
 	}
-	// Images: 1 warning = 2 → 98
-	if sr.Categories["images"] != 98 {
-		t.Errorf("expected images 98, got %d", sr.Categories["images"])
+	// Images: 1 warning = 3 → 97
+	if sr.Categories["images"] != 97 {
+		t.Errorf("expected images 97, got %d", sr.Categories["images"])
 	}
-	// Links: 1 critical = 5 → 95
-	if sr.Categories["links"] != 95 {
-		t.Errorf("expected links 95, got %d", sr.Categories["links"])
+	// Links: 1 critical = 10 → 90
+	if sr.Categories["links"] != 90 {
+		t.Errorf("expected links 90, got %d", sr.Categories["links"])
 	}
-	// Security: 1 info = 0.5 → round(99.5) = 100
-	if sr.Categories["security"] != 100 {
-		t.Errorf("expected security 100, got %d", sr.Categories["security"])
+	// Security: 1 info = 1 → 99
+	if sr.Categories["security"] != 99 {
+		t.Errorf("expected security 99, got %d", sr.Categories["security"])
 	}
-	// Performance: 1 warning = 2 → 98
-	if sr.Categories["performance"] != 98 {
-		t.Errorf("expected performance 98, got %d", sr.Categories["performance"])
+	// Performance: 1 warning = 3 → 97
+	if sr.Categories["performance"] != 97 {
+		t.Errorf("expected performance 97, got %d", sr.Categories["performance"])
 	}
-	// Structured-data: 1 info = 0.5 → 100
-	if sr.Categories["structured-data"] != 100 {
-		t.Errorf("expected structured-data 100, got %d", sr.Categories["structured-data"])
+	// Structured-data: 1 info = 1 → 99
+	if sr.Categories["structured-data"] != 99 {
+		t.Errorf("expected structured-data 99, got %d", sr.Categories["structured-data"])
 	}
-	// Content: 1 info = 0.5 → 100
-	if sr.Categories["content"] != 100 {
-		t.Errorf("expected content 100, got %d", sr.Categories["content"])
+	// Content: 1 info = 1 → 99
+	if sr.Categories["content"] != 99 {
+		t.Errorf("expected content 99, got %d", sr.Categories["content"])
 	}
-	// Accessibility: 1 warning = 2 → 98
-	if sr.Categories["accessibility"] != 98 {
-		t.Errorf("expected accessibility 98, got %d", sr.Categories["accessibility"])
+	// Accessibility: 1 warning = 3 → 97
+	if sr.Categories["accessibility"] != 97 {
+		t.Errorf("expected accessibility 97, got %d", sr.Categories["accessibility"])
 	}
 }
 
@@ -193,9 +191,9 @@ func TestComputeScore_ExternalLinksCategory(t *testing.T) {
 	cr := makeCrawlResult(issues, 1)
 	sr := ComputeScore(cr)
 
-	// external-links maps to "links" category: 1 critical (5) + 1 warning (2) = 7 → 93
-	if sr.Categories["links"] != 93 {
-		t.Errorf("expected links 93 (external-links mapped), got %d", sr.Categories["links"])
+	// external-links maps to "links" category: 1 critical (10) + 1 warning (3) = 13 → 87
+	if sr.Categories["links"] != 87 {
+		t.Errorf("expected links 87 (external-links mapped), got %d", sr.Categories["links"])
 	}
 }
 
@@ -206,9 +204,9 @@ func TestComputeScore_TLSMapsToSecurity(t *testing.T) {
 	cr := makeCrawlResult(issues, 1)
 	sr := ComputeScore(cr)
 
-	// tls maps to security: 1 critical = 5 → 95
-	if sr.Categories["security"] != 95 {
-		t.Errorf("expected security 95 (tls mapped), got %d", sr.Categories["security"])
+	// tls maps to security: 1 critical = 10 → 90
+	if sr.Categories["security"] != 90 {
+		t.Errorf("expected security 90 (tls mapped), got %d", sr.Categories["security"])
 	}
 }
 
@@ -219,9 +217,9 @@ func TestComputeScore_HreflangMapsToSEO(t *testing.T) {
 	cr := makeCrawlResult(issues, 1)
 	sr := ComputeScore(cr)
 
-	// hreflang maps to seo: 1 warning = 2 → 98
-	if sr.Categories["seo"] != 98 {
-		t.Errorf("expected seo 98 (hreflang mapped), got %d", sr.Categories["seo"])
+	// hreflang maps to seo: 1 warning = 3 → 97
+	if sr.Categories["seo"] != 97 {
+		t.Errorf("expected seo 97 (hreflang mapped), got %d", sr.Categories["seo"])
 	}
 }
 
@@ -235,9 +233,9 @@ func TestComputeScore_MixedSeverities(t *testing.T) {
 	cr := makeCrawlResult(issues, 3)
 	sr := ComputeScore(cr)
 
-	// Overall: 100 - 5 - 2 - 0.5 - 2 = 90.5 → 91
-	if sr.Overall != 91 {
-		t.Errorf("expected overall 91, got %d", sr.Overall)
+	// Expected overall: 100 minus (10+3+1+3) deductions equals 83.
+	if sr.Overall != 83 {
+		t.Errorf("expected overall 83, got %d", sr.Overall)
 	}
 }
 
@@ -249,8 +247,8 @@ func TestComputeScore_UnknownPrefixIgnored(t *testing.T) {
 	sr := ComputeScore(cr)
 
 	// Overall still deducted.
-	if sr.Overall != 95 {
-		t.Errorf("expected overall 95, got %d", sr.Overall)
+	if sr.Overall != 90 {
+		t.Errorf("expected overall 90, got %d", sr.Overall)
 	}
 	// All named categories should remain 100 since foobar is unknown.
 	for cat, score := range sr.Categories {
@@ -321,9 +319,9 @@ func TestDeduction(t *testing.T) {
 		severity model.Severity
 		want     float64
 	}{
-		{model.SeverityCritical, 5},
-		{model.SeverityWarning, 2},
-		{model.SeverityInfo, 0.5},
+		{model.SeverityCritical, 10},
+		{model.SeverityWarning, 3},
+		{model.SeverityInfo, 1},
 		{model.Severity("unknown"), 0},
 	}
 	for _, tt := range tests {

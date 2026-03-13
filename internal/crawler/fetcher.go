@@ -24,7 +24,9 @@ import (
 const maxBodySize = 10 * 1024 * 1024
 
 // maxRedirects is the maximum number of redirects to follow before giving up.
-const maxRedirects = 20
+// RFC 7231 recommends clients handle "a limited number of redirections"
+// (typically 5–10). We use 10 as a reasonable upper bound.
+const maxRedirects = 10
 
 // ErrRedirectLoop is returned when a redirect cycle is detected.
 var ErrRedirectLoop = errors.New("redirect loop detected")
@@ -153,7 +155,11 @@ func NewFetcher(cfg *config.Config, l logger.Logger) (Fetcher, func(), error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("create browser fetcher: %w", err)
 		}
-		closer := func() { _ = bf.Close() }
+		closer := func() {
+			if err := bf.Close(); err != nil {
+				l.Warn().Err(err).Msg("browser fetcher close failed")
+			}
+		}
 		return bf, closer, nil
 	}
 

@@ -109,7 +109,11 @@ func (f *Frontier) matchesPatterns(path string) bool {
 	if len(f.includePatterns) > 0 {
 		matched := false
 		for _, p := range f.includePatterns {
-			if ok, _ := filepath.Match(p, path); ok {
+			ok, err := filepath.Match(p, path)
+			if err != nil {
+				continue
+			}
+			if ok {
 				matched = true
 				break
 			}
@@ -120,7 +124,11 @@ func (f *Frontier) matchesPatterns(path string) bool {
 	}
 
 	for _, p := range f.excludePatterns {
-		if ok, _ := filepath.Match(p, path); ok {
+		ok, err := filepath.Match(p, path)
+		if err != nil {
+			continue
+		}
+		if ok {
 			return false
 		}
 	}

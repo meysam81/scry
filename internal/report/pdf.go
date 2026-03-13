@@ -22,6 +22,9 @@ type PDFReporter struct{}
 func (r *PDFReporter) Name() string { return "pdf" }
 
 // Write generates a PDF report and writes it to w.
+// Note: each invocation launches a new headless browser instance to render
+// the HTML-to-PDF conversion. This is intentional as the browser is short-lived
+// and isolated per report generation.
 func (r *PDFReporter) Write(ctx context.Context, result *model.CrawlResult, w io.Writer) error {
 	if result == nil {
 		return nil
@@ -49,7 +52,7 @@ func (r *PDFReporter) Write(ctx context.Context, result *model.CrawlResult, w io
 	htmlReporter := &HTMLReporter{}
 	if err := htmlReporter.Write(ctx, result, htmlFile); err != nil {
 		if closeErr := htmlFile.Close(); closeErr != nil {
-			return fmt.Errorf("generate html: %w (also failed to close file: %v)", err, closeErr)
+			return fmt.Errorf("generate html: %w (also failed to close file: %w)", err, closeErr)
 		}
 		return fmt.Errorf("generate html: %w", err)
 	}

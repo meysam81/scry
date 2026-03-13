@@ -863,10 +863,8 @@ func TestSecurityChecker_MissingSecurityTxt(t *testing.T) {
 				if tt.wantSubstr != "" && !strings.Contains(found.Message, tt.wantSubstr) {
 					t.Errorf("expected message containing %q, got %q", tt.wantSubstr, found.Message)
 				}
-			} else {
-				if found != nil {
-					t.Errorf("did not expect security/missing-security-txt issue, got %+v", *found)
-				}
+			} else if found != nil {
+				t.Errorf("did not expect security/missing-security-txt issue, got %+v", *found)
 			}
 		})
 	}

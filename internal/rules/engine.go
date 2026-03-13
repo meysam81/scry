@@ -16,6 +16,7 @@ import (
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/ext"
+	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
 	"gopkg.in/yaml.v3"
 )
@@ -37,6 +38,7 @@ type RuleFile struct {
 // Engine holds pre-compiled CEL rules ready for evaluation.
 type Engine struct {
 	rules []compiledRule
+	log   logger.Logger
 }
 
 // compiledRule pairs a source Rule with its compiled CEL program and URL matcher.
@@ -62,7 +64,7 @@ func LoadRuleFile(path string) (*RuleFile, error) {
 
 // NewEngine compiles the given rules into CEL programs and returns an Engine.
 // An error is returned if any rule has an invalid CEL expression or glob pattern.
-func NewEngine(rules []Rule) (*Engine, error) {
+func NewEngine(rules []Rule, l logger.Logger) (*Engine, error) {
 	env, err := newCELEnv()
 	if err != nil {
 		return nil, fmt.Errorf("creating CEL environment: %w", err)
@@ -87,7 +89,7 @@ func NewEngine(rules []Rule) (*Engine, error) {
 		})
 	}
 
-	return &Engine{rules: compiled}, nil
+	return &Engine{rules: compiled, log: l}, nil
 }
 
 // Evaluate runs all compiled rules against the given page and returns any issues.
@@ -106,6 +108,7 @@ func (e *Engine) Evaluate(_ context.Context, page *model.Page) []model.Issue {
 			// Evaluation errors are treated as non-matching; the rule
 			// simply does not fire. This keeps the engine resilient to
 			// edge cases in page data.
+			e.log.Debug().Err(err).Str("rule", cr.rule.Name).Str("url", page.URL).Msg("CEL eval error")
 			continue
 		}
 
@@ -168,8 +171,8 @@ func buildMatcher(pattern string) (func(string) bool, error) {
 	}
 
 	return func(url string) bool {
-		ok, _ := filepath.Match(pattern, url)
-		return ok
+		ok, err := filepath.Match(pattern, url)
+		return err == nil && ok
 	}, nil
 }
 

@@ -10,7 +10,10 @@ import (
 )
 
 // SARIFReporter writes the CrawlResult issues in SARIF 2.1.0 format.
-type SARIFReporter struct{}
+// Set Version to override the default "dev" tool version in the output.
+type SARIFReporter struct {
+	Version string
+}
 
 // Name returns "sarif".
 func (r *SARIFReporter) Name() string { return "sarif" }
@@ -146,7 +149,7 @@ func (r *SARIFReporter) Write(_ context.Context, result *model.CrawlResult, w io
 				Tool: sarifTool{
 					Driver: sarifDriver{
 						Name:           "scry",
-						Version:        "1.0.0",
+						Version:        r.toolVersion(),
 						InformationURI: "https://github.com/meysam81/scry",
 						Rules:          rules,
 					},
@@ -170,4 +173,12 @@ func (r *SARIFReporter) Write(_ context.Context, result *model.CrawlResult, w io
 	}
 
 	return nil
+}
+
+// toolVersion returns the configured version or "dev" as default.
+func (r *SARIFReporter) toolVersion() string {
+	if r.Version != "" {
+		return r.Version
+	}
+	return "dev"
 }

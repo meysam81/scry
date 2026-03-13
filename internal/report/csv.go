@@ -9,6 +9,19 @@ import (
 	"github.com/meysam81/scry/internal/model"
 )
 
+// sanitizeCSVCell prevents CSV formula injection by prefixing cells that start
+// with characters interpreted as formulas by spreadsheet applications.
+func sanitizeCSVCell(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	switch s[0] {
+	case '=', '+', '-', '@', '\t', '\r':
+		return "\t" + s
+	}
+	return s
+}
+
 // CSVReporter writes the CrawlResult issues as a CSV document.
 type CSVReporter struct{}
 
@@ -31,11 +44,11 @@ func (r *CSVReporter) Write(_ context.Context, result *model.CrawlResult, w io.W
 
 	for i, iss := range result.Issues {
 		row := []string{
-			iss.URL,
-			string(iss.Severity),
-			iss.CheckName,
-			iss.Message,
-			iss.Detail,
+			sanitizeCSVCell(iss.URL),
+			sanitizeCSVCell(string(iss.Severity)),
+			sanitizeCSVCell(iss.CheckName),
+			sanitizeCSVCell(iss.Message),
+			sanitizeCSVCell(iss.Detail),
 		}
 		if err := cw.Write(row); err != nil {
 			return fmt.Errorf("writing CSV row %d: %w", i, err)

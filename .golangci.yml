@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/golangci/golangci-lint/ca9cb19a64550c6680d1e6fca74b44028ecc4d93/.golangci.reference.yml
+
+version: "2"
+
+linters:
+  # Start from the standard preset, then layer on security + correctness linters.
+  default: standard
+
+  enable:
+    # Security
+    - gosec # Go security checker: SQL injection, crypto misuse, hardcoded creds
+    - gocritic # Opinionated but catches real bugs (diagnostic + style checks)
+
+    # Correctness
+    - bodyclose # Ensures HTTP response bodies are closed
+    - sqlclosecheck # Ensures SQL rows and statements are closed
+    - nilerr # Catches `if err != nil { return nil }` bugs
+    - rowserrcheck # Catches unchecked rows.Err()
+    - reassign # Catches accidental variable reassignment
+    - copyloopvar # Catches loop variable capture bugs
+
+    # Code quality
+    - unconvert # Removes unnecessary type conversions
+    - wastedassign # Finds unused variable assignments
+    - exhaustive # Ensures switch statements handle all enum cases
+    - errname # Enforces error naming convention (ErrFoo)
+    - errorlint # Ensures proper error wrapping and comparison
+    - misspell # Catches common misspellings in comments and strings
+    - goconst # Finds repeated strings that should be constants
+
+    # Import hygiene
+    - depguard # Ban direct github.com/rs/zerolog/log imports
+
+  disable:
+    # Too noisy for current codebase — enable gradually
+    - contextcheck # 50 hits — enable after refactoring background jobs
+    - noctx # 35 hits — enable after adding context to HTTP clients
+    - prealloc # Nice-to-have, not security-critical
+
+    # Conflicts with our style or too opinionated
+    - wsl # Too opinionated about whitespace
+    - varnamelen # Conflicts with Google Go style (short names in small scopes)
+    - ireturn # Too restrictive for our interface patterns
+    - wrapcheck # Too verbose for internal packages
+    - exhaustruct # Too strict — not every struct field needs explicit init
+    - nlreturn # Too opinionated about blank lines before returns
+    - gochecknoglobals # We use package-level vars intentionally (loggers, pools)
+    - funlen # Our handlers can be long — complexity matters more than length
+    - lll # No hard line length in Google Go style
+
+  exclusions:
+    paths:
+      - node_modules
+    rules:
+      # Test files get more relaxed rules
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+          - bodyclose
+          - contextcheck
+          - goconst
+      # CLI tool reads files from user-provided flags — expected pattern
+      - linters:
+          - gosec
+        text: "G304"
+      # CLI tool spawns subprocesses — expected pattern
+      - linters:
+          - gosec
+        text: "G204"
+
+  settings:
+    gosec:
+      excludes:
+        - G104 # Covered by errcheck
+        - G115 # Integer overflow conversion — safe in our simhash/bitwise context
+        - G301 # Directory permissions — intentional for CLI output
+        - G302 # File permissions — intentional for CLI output
+        - G306 # WriteFile permissions — intentional for CLI output
+        - G404 # Weak random — not used in security context
+        - G602 # Slice bounds — false positive in simhash
+      confidence: medium
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+      disabled-checks:
+        - hugeParam # Too strict for our handler patterns
+        - rangeValCopy # Covered by copyloopvar
+
+    depguard:
+      rules:
+        no-global-zerolog:
+          deny:
+            - pkg: "github.com/rs/zerolog/log"
+              desc: "Use dependency injection (*logger.Logger) instead of global zerolog logger. Only internal/logger may import this."
+
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+      exclude-functions:
+        - fmt.Fprint # Write to http.ResponseWriter — errors handled by http layer
+
+    exhaustive:
+      default-signifies-exhaustive: true # `default:` case counts as exhaustive
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 5

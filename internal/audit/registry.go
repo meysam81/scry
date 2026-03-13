@@ -64,7 +64,7 @@ func DefaultRegistry(l logger.Logger) *Registry {
 // CheckSite method is called. Results are sorted by severity (critical first),
 // then URL, then CheckName.
 func (r *Registry) RunAll(ctx context.Context, pages []*model.Page) []model.Issue {
-	auditLogger = r.log
+	setAuditLogger(r.log)
 
 	var (
 		mu     sync.Mutex

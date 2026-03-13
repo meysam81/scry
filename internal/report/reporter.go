@@ -25,7 +25,7 @@ func AllReporters() map[string]Reporter {
 		"csv":      &CSVReporter{},
 		"markdown": &MarkdownReporter{},
 		"html":     &HTMLReporter{},
-		"sarif":    &SARIFReporter{},
+		"sarif":    &SARIFReporter{Version: "dev"},
 		"junit":    &JUnitReporter{},
 		"jsonl":    &JSONLReporter{},
 		"pdf":      &PDFReporter{},

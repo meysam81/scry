@@ -121,10 +121,18 @@ func (rc *RobotsChecker) cacheEmpty(host string) *robotsRules {
 	return rules
 }
 
+// maxRobotsPatternLen caps the length of robots.txt patterns that are compiled
+// into regexps to mitigate ReDoS from attacker-controlled input.
+const maxRobotsPatternLen = 500
+
 // compileRobotsPattern converts a robots.txt path pattern into a compiled
 // regexp when the pattern contains wildcard characters (* or trailing $).
-// Returns nil when the pattern uses only simple prefix semantics.
+// Returns nil when the pattern uses only simple prefix semantics or exceeds
+// the maximum allowed length.
 func compileRobotsPattern(pattern string) *regexp.Regexp {
+	if len(pattern) > maxRobotsPatternLen {
+		return nil
+	}
 	if !strings.Contains(pattern, "*") && !strings.HasSuffix(pattern, "$") {
 		return nil
 	}

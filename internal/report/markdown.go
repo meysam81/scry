@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"text/template"
 
 	"github.com/meysam81/scry/internal/model"
@@ -11,11 +12,23 @@ import (
 
 const markdownTimeFmt = "2006-01-02 15:04:05"
 
-var mdTmpl = template.Must(template.New("markdown").Parse(markdownTemplate))
+// escapeMD escapes characters that break Markdown table cells or link syntax.
+func escapeMD(s string) string {
+	s = strings.ReplaceAll(s, "|", "\\|")
+	s = strings.ReplaceAll(s, "[", "\\[")
+	s = strings.ReplaceAll(s, "]", "\\]")
+	s = strings.ReplaceAll(s, "\n", " ")
+	s = strings.ReplaceAll(s, "\r", "")
+	return s
+}
+
+var mdTmpl = template.Must(template.New("markdown").Funcs(template.FuncMap{
+	"escapeMD": escapeMD,
+}).Parse(markdownTemplate))
 
 const markdownTemplate = `# Site Audit Report
 
-**URL:** {{ .SeedURL }}
+**URL:** {{ .SeedURL | escapeMD }}
 **Crawled:** {{ .CrawledAt }}
 **Pages:** {{ .PageCount }}
 **Duration:** {{ .Duration }}
@@ -30,17 +43,17 @@ const markdownTemplate = `# Site Audit Report
 {{ if .CriticalIssues }}
 ## Critical Issues
 {{ range .CriticalIssues }}
-- [{{ .CheckName }}] {{ .URL }}: {{ .Message }}
+- [{{ .CheckName | escapeMD }}] {{ .URL | escapeMD }}: {{ .Message | escapeMD }}
 {{- end }}
 {{ end }}{{ if .WarningIssues }}
 ## Warning Issues
 {{ range .WarningIssues }}
-- [{{ .CheckName }}] {{ .URL }}: {{ .Message }}
+- [{{ .CheckName | escapeMD }}] {{ .URL | escapeMD }}: {{ .Message | escapeMD }}
 {{- end }}
 {{ end }}{{ if .InfoIssues }}
 ## Info Issues
 {{ range .InfoIssues }}
-- [{{ .CheckName }}] {{ .URL }}: {{ .Message }}
+- [{{ .CheckName | escapeMD }}] {{ .URL | escapeMD }}: {{ .Message | escapeMD }}
 {{- end }}
 {{ end }}{{ if .HasLighthouse }}
 ## Lighthouse Scores
@@ -48,7 +61,7 @@ const markdownTemplate = `# Site Audit Report
 | URL | Performance | Accessibility | Best Practices | SEO |
 | --- | ----------- | ------------- | -------------- | --- |
 {{ range .LighthouseRows -}}
-| {{ .URL }} | {{ .Performance }} | {{ .Accessibility }} | {{ .BestPractices }} | {{ .SEO }} |
+| {{ .URL | escapeMD }} | {{ .Performance }} | {{ .Accessibility }} | {{ .BestPractices }} | {{ .SEO }} |
 {{ end }}{{ end }}`
 
 // mdData holds the pre-processed data passed to the Markdown template.

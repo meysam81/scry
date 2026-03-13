@@ -2,9 +2,14 @@
 package safenet
 
 import (
+	"context"
 	"net"
 	"net/url"
+	"time"
 )
+
+// dnsTimeout is the maximum time allowed for DNS resolution.
+const dnsTimeout = 5 * time.Second
 
 // IsSafeURL resolves the hostname of rawURL and rejects private, loopback,
 // and link-local addresses to prevent server-side request forgery.
@@ -19,14 +24,18 @@ func IsSafeURL(rawURL string) bool {
 		return false
 	}
 
-	// Resolve to IP addresses.
-	ips, err := net.LookupIP(host)
+	// Resolve to IP addresses with a timeout to prevent hanging on
+	// attacker-controlled DNS servers.
+	ctx, cancel := context.WithTimeout(context.Background(), dnsTimeout)
+	defer cancel()
+
+	ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
 	if err != nil {
 		return false
 	}
 
 	for _, ip := range ips {
-		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		if ip.IP.IsLoopback() || ip.IP.IsPrivate() || ip.IP.IsLinkLocalUnicast() || ip.IP.IsLinkLocalMulticast() {
 			return false
 		}
 	}

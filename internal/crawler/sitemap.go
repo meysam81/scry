@@ -99,7 +99,7 @@ var gzipMagic = []byte{0x1f, 0x8b}
 // fetchSitemapBody retrieves the raw body of a sitemap URL.
 // Gzip-compressed responses are transparently decompressed based on the URL
 // suffix (.gz), Content-Encoding header, Content-Type header, or gzip magic bytes.
-func fetchSitemapBody(ctx context.Context, sitemapURL string) ([]byte, error) {
+func fetchSitemapBody(ctx context.Context, sitemapURL string) (_ []byte, retErr error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sitemapURL, nil)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,11 @@ func fetchSitemapBody(ctx context.Context, sitemapURL string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() {
+		if err := resp.Body.Close(); err != nil && retErr == nil {
+			retErr = fmt.Errorf("close resp body: %w", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("sitemap %s: status %d", sitemapURL, resp.StatusCode)
@@ -146,12 +150,16 @@ func isGzipped(sitemapURL string, resp *http.Response, body []byte) bool {
 }
 
 // decompressGzip decompresses a gzip-compressed byte slice.
-func decompressGzip(data []byte) ([]byte, error) {
+func decompressGzip(data []byte) (_ []byte, retErr error) {
 	gr, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("gzip reader: %w", err)
 	}
-	defer func() { _ = gr.Close() }()
+	defer func() {
+		if err := gr.Close(); err != nil && retErr == nil {
+			retErr = fmt.Errorf("gzip close: %w", err)
+		}
+	}()
 
 	return io.ReadAll(io.LimitReader(gr, maxBodySize))
 }
