@@ -3,8 +3,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/urfave/cli/v3"
@@ -13,6 +15,7 @@ import (
 	"github.com/meysam81/scry/cmd/crawl"
 	"github.com/meysam81/scry/cmd/lighthouse"
 	"github.com/meysam81/scry/cmd/validate"
+	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/logger"
 )
 
@@ -61,7 +64,7 @@ func main() {
 				Name:        "output",
 				Aliases:     []string{"o"},
 				Value:       "terminal",
-				Usage:       "output format(s), comma-separated",
+				Usage:       fmt.Sprintf("output format(s), comma-separated: %s", strings.Join(config.ValidOutputFormats(), ", ")),
 				Destination: &flagOutput,
 			},
 			&cli.StringFlag{

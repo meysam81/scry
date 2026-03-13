@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -78,6 +79,16 @@ var validOutputFormats = map[string]bool{
 	"junit":    true,
 	"jsonl":    true,
 	"pdf":      true,
+}
+
+// ValidOutputFormats returns the accepted output format names in sorted order.
+func ValidOutputFormats() []string {
+	names := make([]string, 0, len(validOutputFormats))
+	for k := range validOutputFormats {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	return names
 }
 
 // Load parses environment variables into a Config and validates it.
