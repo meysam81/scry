@@ -30,7 +30,13 @@ builds:
     main: .
 
 archives:
-  - id: default
+  - format_overrides:
+      - formats:
+          - zip
+        goos: windows
+    formats:
+      - tar.gz
+    id: default
     name_template: >-
       {{ .ProjectName }}_
       {{- tolower .Os }}_

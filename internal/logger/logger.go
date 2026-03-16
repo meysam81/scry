@@ -5,6 +5,7 @@ package logger
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -27,9 +28,9 @@ func Setup(level, format string) Logger {
 
 	switch format {
 	case "json":
-		zl = zerolog.New(os.Stderr).With().Timestamp().Logger()
+		zl = zerolog.New(os.Stderr).With().Caller().Timestamp().Logger()
 	default:
-		zl = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+		zl = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).With().Caller().Timestamp().Logger()
 	}
 
 	switch level {

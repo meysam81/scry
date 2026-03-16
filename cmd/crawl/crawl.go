@@ -244,7 +244,7 @@ func runCrawl(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return cli.Exit(fmt.Sprintf("crawl failed: %v", err), 2)
 	}
-	l.Info().Int("pages", len(result.Pages)).Dur("duration", result.Duration).Msg("crawl complete")
+	l.Info().Int("pages", len(result.Pages)).Str("duration", result.Duration.String()).Msg("crawl complete")
 
 	// Run audit checks.
 	l.Info().Msg("running audit checks")
