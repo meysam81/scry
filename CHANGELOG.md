@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/meysam81/scry/compare/v0.0.1...v0.0.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* **CI:** create windows assets in zip ([584a14b](https://github.com/meysam81/scry/commit/584a14bc6027ec15736cc8423386d36686757b92))
+
 ## 0.0.1 (2026-03-13)
 
 
