@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"text/template"
+	"text/template" // nosemgrep: import-text-template -- generates markdown files, not HTML; html/template would break output
 
 	"github.com/meysam81/scry/internal/model"
 )

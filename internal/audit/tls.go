@@ -85,8 +85,8 @@ func (c *TLSChecker) Check(ctx context.Context, page *model.Page) []model.Issue 
 // inspectTLS performs the TLS handshake and returns issues found.
 func (c *TLSChecker) inspectTLS(_ context.Context, hostname, addr, pageURL string) []model.Issue {
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true, //nolint:gosec // intentional for inspection
-		MinVersion:         tls.VersionTLS10,
+		InsecureSkipVerify: true,             //nolint:gosec // nosemgrep: bypass-tls-verification -- intentional: audit tool must connect to inspect certs
+		MinVersion:         tls.VersionTLS10, // nosemgrep: disallow-old-tls-versions -- intentional: audit tool must detect weak TLS versions
 	}
 
 	conn, err := c.dialer("tcp", addr, tlsConfig)

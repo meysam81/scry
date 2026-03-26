@@ -30,5 +30,7 @@ COPY --from=build /app/scry /usr/local/bin/scry
 
 EXPOSE 8080
 
+USER 65534:65534
+
 ENTRYPOINT ["/usr/local/bin/scry"]
 CMD ["--help"]
