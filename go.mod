@@ -10,7 +10,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.7.8
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rs/zerolog v1.34.0
-	github.com/urfave/cli/v3 v3.7.0
+	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/net v0.51.0
 	golang.org/x/time v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
