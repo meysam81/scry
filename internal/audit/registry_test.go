@@ -56,7 +56,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestDefaultRegistry(t *testing.T) {
-	r := DefaultRegistry(logger.Nop())
+	r := DefaultRegistry(logger.Nop(), "")
 	if len(r.checkers) != 12 {
 		t.Fatalf("expected 12 checkers, got %d", len(r.checkers))
 	}
@@ -182,7 +182,7 @@ func TestRunAll_Sorting(t *testing.T) {
 }
 
 func TestRunAll_EmptyPages(t *testing.T) {
-	r := DefaultRegistry(logger.Nop())
+	r := DefaultRegistry(logger.Nop(), "")
 	issues := r.RunAll(context.Background(), nil)
 	// Some site-wide checkers may still report issues on nil pages
 	// (e.g. security.txt check). Just verify no panic occurs.

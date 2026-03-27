@@ -14,6 +14,7 @@ import (
 	"github.com/meysam81/scry/cmd/check"
 	"github.com/meysam81/scry/cmd/crawl"
 	"github.com/meysam81/scry/cmd/lighthouse"
+	"github.com/meysam81/scry/cmd/update"
 	"github.com/meysam81/scry/cmd/validate"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/logger"
@@ -91,6 +92,7 @@ func main() {
 			crawl.Command(),
 			check.Command(),
 			lighthouse.Command(),
+			update.Command(),
 			validate.Command(),
 		},
 	}

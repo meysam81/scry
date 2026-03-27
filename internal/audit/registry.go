@@ -9,6 +9,7 @@ import (
 
 	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/internal/schema"
 )
 
 // Checker runs checks against a single crawled page.
@@ -40,7 +41,8 @@ func (r *Registry) Register(c Checker) {
 }
 
 // DefaultRegistry creates a Registry with all built-in checkers registered.
-func DefaultRegistry(l logger.Logger) *Registry {
+// If schemaPath is empty, it falls back to the default local schema path.
+func DefaultRegistry(l logger.Logger, schemaPath string) *Registry {
 	r := NewRegistry(l)
 	r.Register(NewSEOChecker())
 	r.Register(NewHealthChecker())
@@ -53,7 +55,10 @@ func DefaultRegistry(l logger.Logger) *Registry {
 	r.Register(NewHreflangChecker())
 	r.Register(NewExternalLinkChecker())
 	r.Register(NewTLSChecker())
-	r.Register(NewDeepStructuredDataChecker())
+	if schemaPath == "" {
+		schemaPath = schema.LocalSchemaPath()
+	}
+	r.Register(NewDeepStructuredDataChecker(schema.Load(schemaPath)))
 	return r
 }
 

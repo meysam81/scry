@@ -123,23 +123,26 @@ Severity levels: **Critical** (must fix), **Warning** (should investigate), **In
 
 ## Structured Data
 
-| Check                                          | Severity | Description                                                                                  |
-| ---------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `structured-data/missing-json-ld`              | Info     | Page has no JSON-LD structured data                                                          |
-| `structured-data/malformed-json-ld`            | Warning  | JSON-LD block contains invalid JSON                                                          |
-| `structured-data/microdata-detected`           | Info     | HTML contains microdata attributes; consider migrating to JSON-LD                            |
-| `structured-data/missing-type`                 | Warning  | JSON-LD block has no `@type` field                                                           |
-| `structured-data/unknown-type`                 | Info     | JSON-LD `@type` is not a commonly recognised Schema.org type                                 |
-| `structured-data/article-missing-fields`       | Warning  | Article/BlogPosting is missing required fields (`headline`, `datePublished`, `author`)       |
-| `structured-data/product-missing-fields`       | Warning  | Product is missing required fields (`name`, `description`)                                   |
-| `structured-data/faq-missing-fields`           | Warning  | FAQPage is missing required fields (`mainEntity`)                                            |
-| `structured-data/breadcrumb-missing-fields`    | Info     | BreadcrumbList is missing required fields (`itemListElement`)                                |
-| `structured-data/event-missing-fields`         | Warning  | Event is missing required fields (`name`, `startDate`, `location`)                           |
-| `structured-data/recipe-missing-fields`        | Warning  | Recipe is missing required fields (`name`, `image`, `recipeIngredient`)                      |
-| `structured-data/video-missing-fields`         | Warning  | VideoObject is missing required fields (`name`, `description`, `thumbnailUrl`, `uploadDate`) |
-| `structured-data/localbusiness-missing-fields` | Warning  | LocalBusiness is missing required fields (`name`, `address`, `telephone`)                    |
-| `structured-data/invalid-date-format`          | Warning  | JSON-LD date field has invalid or non-ISO 8601 value                                         |
-| `structured-data/invalid-url-field`            | Warning  | JSON-LD URL field has invalid value (not http/https or relative path)                        |
+| Check                                        | Severity | Description                                                                   |
+| -------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `structured-data/missing-json-ld`            | Info     | Page has no JSON-LD structured data                                           |
+| `structured-data/malformed-json-ld`          | Warning  | JSON-LD block contains invalid JSON                                           |
+| `structured-data/microdata-detected`         | Info     | HTML contains microdata attributes; consider migrating to JSON-LD             |
+| `structured-data/missing-context`            | Info     | JSON-LD block has no @context                                                 |
+| `structured-data/wrong-context`              | Warning  | @context doesn't point to schema.org                                          |
+| `structured-data/missing-type`               | Warning  | JSON-LD block has no `@type` field                                            |
+| `structured-data/unknown-type`               | Info     | JSON-LD `@type` is not a commonly recognised Schema.org type                  |
+| `structured-data/missing-required-field`     | Warning  | Schema.org type is missing required fields                                    |
+| `structured-data/invalid-date-format`        | Warning  | JSON-LD date field has invalid or non-ISO 8601 value                          |
+| `structured-data/invalid-url-field`          | Warning  | JSON-LD URL field has invalid value (not http/https or relative path)         |
+| `structured-data/invalid-nested-type`        | Warning  | Nested object's @type doesn't match expected types for the property           |
+| `structured-data/invalid-enum-value`         | Warning  | Property value is not in the allowed enum set                                 |
+| `structured-data/breadcrumb-positions`       | Warning  | BreadcrumbList items have non-sequential positions                            |
+| `structured-data/duplicate-type`             | Info     | Multiple JSON-LD blocks on the same page declare the same @type               |
+| `structured-data/google-missing-required`    | Warning  | Google Rich Results required field is missing                                 |
+| `structured-data/google-missing-recommended` | Info     | Google Rich Results recommended field is missing                              |
+| `structured-data/not-google-eligible`        | Info     | Schema.org type is not eligible for Google Rich Results                       |
+| `structured-data/search-action-template`     | Warning  | WebSite SearchAction target is missing {search_term_string} template variable |
 
 ## External Links
 
@@ -170,4 +173,4 @@ Severity levels: **Critical** (must fix), **Warning** (should investigate), **In
 
 ---
 
-**Total: 86 checks** across 11 categories.
+**Total: 110 checks** across 11 categories.

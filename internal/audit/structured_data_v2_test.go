@@ -6,17 +6,18 @@ import (
 	"testing"
 
 	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/internal/schema"
 )
 
 func TestDeepStructuredDataChecker_Name(t *testing.T) {
-	c := NewDeepStructuredDataChecker()
+	c := NewDeepStructuredDataChecker(schema.Load(""))
 	if c.Name() != "deep-structured-data" {
 		t.Fatalf("expected name %q, got %q", "deep-structured-data", c.Name())
 	}
 }
 
 func TestDeepStructuredDataChecker_Check(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	tests := []struct {
@@ -60,7 +61,7 @@ func TestDeepStructuredDataChecker_Check(t *testing.T) {
 		{
 			name:       "Article missing headline and author",
 			html:       `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","datePublished":"2024-01-01"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/article-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "headline",
@@ -68,15 +69,15 @@ func TestDeepStructuredDataChecker_Check(t *testing.T) {
 		{
 			name:       "Article missing all required fields",
 			html:       `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/article-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "headline",
 		},
 		{
-			name:       "BlogPosting missing fields (uses Article check)",
+			name:       "BlogPosting missing fields",
 			html:       `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/article-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "headline",
@@ -84,7 +85,7 @@ func TestDeepStructuredDataChecker_Check(t *testing.T) {
 		{
 			name:       "Product missing description",
 			html:       `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Widget"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/product-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "description",
@@ -97,7 +98,7 @@ func TestDeepStructuredDataChecker_Check(t *testing.T) {
 		{
 			name:       "FAQPage missing mainEntity",
 			html:       `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/faq-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "mainEntity",
@@ -110,8 +111,8 @@ func TestDeepStructuredDataChecker_Check(t *testing.T) {
 		{
 			name:       "BreadcrumbList missing itemListElement",
 			html:       `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/breadcrumb-missing-fields",
-			wantSev:    model.SeverityInfo,
+			wantCheck:  "structured-data/missing-required-field",
+			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "itemListElement",
 		},
@@ -175,7 +176,7 @@ func TestDeepStructuredDataChecker_Check(t *testing.T) {
 }
 
 func TestDeepStructuredDataChecker_ArrayJSONLD(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	page := htmlPage(`<html><head><script type="application/ld+json">[
@@ -185,27 +186,20 @@ func TestDeepStructuredDataChecker_ArrayJSONLD(t *testing.T) {
 
 	issues := checker.Check(ctx, page)
 
-	// Article missing fields
-	foundArticle := false
-	foundProduct := false
+	// Both Article and Product are missing required fields.
+	count := 0
 	for _, iss := range issues {
-		if iss.CheckName == "structured-data/article-missing-fields" {
-			foundArticle = true
-		}
-		if iss.CheckName == "structured-data/product-missing-fields" {
-			foundProduct = true
+		if iss.CheckName == "structured-data/missing-required-field" {
+			count++
 		}
 	}
-	if !foundArticle {
-		t.Error("expected structured-data/article-missing-fields for array JSON-LD")
-	}
-	if !foundProduct {
-		t.Error("expected structured-data/product-missing-fields for array JSON-LD")
+	if count < 2 {
+		t.Errorf("expected at least 2 missing-required-field issues for array JSON-LD, got %d; issues=%+v", count, issues)
 	}
 }
 
 func TestDeepStructuredDataChecker_GraphJSONLD(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	page := htmlPage(`<html><head><script type="application/ld+json">{
@@ -221,23 +215,25 @@ func TestDeepStructuredDataChecker_GraphJSONLD(t *testing.T) {
 	foundArticle := false
 	foundBreadcrumb := false
 	for _, iss := range issues {
-		if iss.CheckName == "structured-data/article-missing-fields" {
-			foundArticle = true
-		}
-		if iss.CheckName == "structured-data/breadcrumb-missing-fields" {
-			foundBreadcrumb = true
+		if iss.CheckName == "structured-data/missing-required-field" {
+			if strings.Contains(iss.Message, "Article") {
+				foundArticle = true
+			}
+			if strings.Contains(iss.Message, "BreadcrumbList") {
+				foundBreadcrumb = true
+			}
 		}
 	}
 	if !foundArticle {
-		t.Error("expected structured-data/article-missing-fields for @graph JSON-LD")
+		t.Error("expected missing-required-field for Article in @graph JSON-LD")
 	}
 	if !foundBreadcrumb {
-		t.Error("expected structured-data/breadcrumb-missing-fields for @graph JSON-LD")
+		t.Error("expected missing-required-field for BreadcrumbList in @graph JSON-LD")
 	}
 }
 
 func TestDeepStructuredDataChecker_MultipleScriptTags(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	page := htmlPage(`<html><head>
@@ -250,23 +246,25 @@ func TestDeepStructuredDataChecker_MultipleScriptTags(t *testing.T) {
 	foundArticle := false
 	foundProduct := false
 	for _, iss := range issues {
-		if iss.CheckName == "structured-data/article-missing-fields" {
-			foundArticle = true
-		}
-		if iss.CheckName == "structured-data/product-missing-fields" {
-			foundProduct = true
+		if iss.CheckName == "structured-data/missing-required-field" {
+			if strings.Contains(iss.Message, "Article") {
+				foundArticle = true
+			}
+			if strings.Contains(iss.Message, "Product") {
+				foundProduct = true
+			}
 		}
 	}
 	if !foundArticle {
-		t.Error("expected structured-data/article-missing-fields from first script tag")
+		t.Error("expected missing-required-field for Article from first script tag")
 	}
 	if !foundProduct {
-		t.Error("expected structured-data/product-missing-fields from second script tag")
+		t.Error("expected missing-required-field for Product from second script tag")
 	}
 }
 
 func TestDeepStructuredDataChecker_MultiTypeArray(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	// @type can be an array of types.
@@ -277,21 +275,21 @@ func TestDeepStructuredDataChecker_MultiTypeArray(t *testing.T) {
 
 	issues := checker.Check(ctx, page)
 
-	// Both Article and BlogPosting map to article-missing-fields.
+	// Both Article and BlogPosting map to missing-required-field.
 	count := 0
 	for _, iss := range issues {
-		if iss.CheckName == "structured-data/article-missing-fields" {
+		if iss.CheckName == "structured-data/missing-required-field" {
 			count++
 		}
 	}
 	// We expect issues from both type entries since fields are missing.
 	if count < 1 {
-		t.Errorf("expected at least 1 article-missing-fields issue for multi-type, got %d; issues=%+v", count, issues)
+		t.Errorf("expected at least 1 missing-required-field issue for multi-type, got %d; issues=%+v", count, issues)
 	}
 }
 
 func TestDeepStructuredDataChecker_AllKnownTypes(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	knownTypes := []string{
@@ -317,7 +315,7 @@ func TestDeepStructuredDataChecker_AllKnownTypes(t *testing.T) {
 }
 
 func TestDeepStructuredDataChecker_ArticleWithAllFields(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	page := htmlPage(`<html><head><script type="application/ld+json">{
@@ -330,8 +328,8 @@ func TestDeepStructuredDataChecker_ArticleWithAllFields(t *testing.T) {
 
 	issues := checker.Check(ctx, page)
 	for _, iss := range issues {
-		if iss.CheckName == "structured-data/article-missing-fields" {
-			t.Errorf("did not expect article-missing-fields when all fields present, got %+v", iss)
+		if iss.CheckName == "structured-data/missing-required-field" {
+			t.Errorf("did not expect missing-required-field when all fields present, got %+v", iss)
 		}
 	}
 }
@@ -341,7 +339,7 @@ func TestDeepStructuredDataChecker_ArticleWithAllFields(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDeepStructuredDataChecker_InvalidDateFormat(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	tests := []struct {
@@ -457,7 +455,7 @@ func TestDeepStructuredDataChecker_InvalidDateFormat(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDeepStructuredDataChecker_InvalidURLField(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	tests := []struct {
@@ -576,7 +574,7 @@ func TestDeepStructuredDataChecker_InvalidURLField(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDeepStructuredDataChecker_MicrodataDetected(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	tests := []struct {
@@ -649,11 +647,11 @@ func TestDeepStructuredDataChecker_MicrodataDetected(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// New type required field tests (Event, Recipe, VideoObject, LocalBusiness)
+// Type required field tests (Event, Recipe, VideoObject, LocalBusiness)
 // ---------------------------------------------------------------------------
 
-func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
-	checker := NewDeepStructuredDataChecker()
+func TestDeepStructuredDataChecker_TypeRequiredFields(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
 	ctx := context.Background()
 
 	tests := []struct {
@@ -668,7 +666,7 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:       "Event missing all required fields",
 			html:       `<html><head><script type="application/ld+json">{"@type":"Event"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/event-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "name",
@@ -676,7 +674,7 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:       "Event missing startDate and location",
 			html:       `<html><head><script type="application/ld+json">{"@type":"Event","name":"Conference"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/event-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "startDate",
@@ -684,14 +682,14 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:      "Event with all required fields",
 			html:      `<html><head><script type="application/ld+json">{"@type":"Event","name":"Conference","startDate":"2024-09-01","location":"Convention Center"}</script></head><body></body></html>`,
-			wantCheck: "structured-data/event-missing-fields",
+			wantCheck: "structured-data/missing-required-field",
 			wantIssue: false,
 		},
 		// Recipe tests
 		{
 			name:       "Recipe missing all required fields",
 			html:       `<html><head><script type="application/ld+json">{"@type":"Recipe"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/recipe-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "name",
@@ -699,7 +697,7 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:       "Recipe missing image and recipeIngredient",
 			html:       `<html><head><script type="application/ld+json">{"@type":"Recipe","name":"Cake"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/recipe-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "image",
@@ -707,14 +705,14 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:      "Recipe with all required fields",
 			html:      `<html><head><script type="application/ld+json">{"@type":"Recipe","name":"Cake","image":"https://example.com/cake.jpg","recipeIngredient":["flour","sugar"]}</script></head><body></body></html>`,
-			wantCheck: "structured-data/recipe-missing-fields",
+			wantCheck: "structured-data/missing-required-field",
 			wantIssue: false,
 		},
 		// VideoObject tests
 		{
 			name:       "VideoObject missing all required fields",
 			html:       `<html><head><script type="application/ld+json">{"@type":"VideoObject"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/video-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "name",
@@ -722,7 +720,7 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:       "VideoObject missing thumbnailUrl and uploadDate",
 			html:       `<html><head><script type="application/ld+json">{"@type":"VideoObject","name":"Demo","description":"A demo video"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/video-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "thumbnailUrl",
@@ -730,14 +728,14 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:      "VideoObject with all required fields",
 			html:      `<html><head><script type="application/ld+json">{"@type":"VideoObject","name":"Demo","description":"A demo","thumbnailUrl":"https://example.com/thumb.jpg","uploadDate":"2024-01-01"}</script></head><body></body></html>`,
-			wantCheck: "structured-data/video-missing-fields",
+			wantCheck: "structured-data/missing-required-field",
 			wantIssue: false,
 		},
 		// LocalBusiness tests
 		{
 			name:       "LocalBusiness missing all required fields",
 			html:       `<html><head><script type="application/ld+json">{"@type":"LocalBusiness"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/localbusiness-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "name",
@@ -745,7 +743,7 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:       "LocalBusiness missing address and telephone",
 			html:       `<html><head><script type="application/ld+json">{"@type":"LocalBusiness","name":"Acme Corp"}</script></head><body></body></html>`,
-			wantCheck:  "structured-data/localbusiness-missing-fields",
+			wantCheck:  "structured-data/missing-required-field",
 			wantSev:    model.SeverityWarning,
 			wantIssue:  true,
 			wantSubstr: "address",
@@ -753,7 +751,7 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 		{
 			name:      "LocalBusiness with all required fields",
 			html:      `<html><head><script type="application/ld+json">{"@type":"LocalBusiness","name":"Acme Corp","address":"123 Main St","telephone":"+1-555-0100"}</script></head><body></body></html>`,
-			wantCheck: "structured-data/localbusiness-missing-fields",
+			wantCheck: "structured-data/missing-required-field",
 			wantIssue: false,
 		},
 	}
@@ -788,5 +786,191 @@ func TestDeepStructuredDataChecker_NewTypeRequiredFields(t *testing.T) {
 				t.Errorf("expected issue %s not found in %+v", tt.wantCheck, issues)
 			}
 		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Context validation tests
+// ---------------------------------------------------------------------------
+
+func TestDeepStructuredDataChecker_ContextValidation(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		html      string
+		wantCheck string
+		wantIssue bool
+	}{
+		{
+			name:      "missing context",
+			html:      `<html><head><script type="application/ld+json">{"@type":"Article","headline":"T","datePublished":"2024-01-01","author":"A"}</script></head><body></body></html>`,
+			wantCheck: "structured-data/missing-context",
+			wantIssue: true,
+		},
+		{
+			name:      "valid context",
+			html:      `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"T","datePublished":"2024-01-01","author":"A"}</script></head><body></body></html>`,
+			wantCheck: "structured-data/missing-context",
+			wantIssue: false,
+		},
+		{
+			name:      "wrong context",
+			html:      `<html><head><script type="application/ld+json">{"@context":"https://example.com","@type":"Article","headline":"T","datePublished":"2024-01-01","author":"A"}</script></head><body></body></html>`,
+			wantCheck: "structured-data/wrong-context",
+			wantIssue: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			page := htmlPage(tt.html)
+			issues := checker.Check(ctx, page)
+			found := false
+			for _, iss := range issues {
+				if iss.CheckName == tt.wantCheck {
+					found = true
+				}
+			}
+			if tt.wantIssue && !found {
+				t.Errorf("expected %s, got %+v", tt.wantCheck, issues)
+			}
+			if !tt.wantIssue && found {
+				t.Errorf("did not expect %s, got %+v", tt.wantCheck, issues)
+			}
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Google Rich Results validation tests
+// ---------------------------------------------------------------------------
+
+func TestDeepStructuredDataChecker_GoogleValidation(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
+	ctx := context.Background()
+
+	page := htmlPage(`<html><head><script type="application/ld+json">{
+		"@context":"https://schema.org",
+		"@type":"Article",
+		"headline":"Test",
+		"datePublished":"2024-01-15",
+		"author":"Author"
+	}</script></head><body></body></html>`)
+
+	issues := checker.Check(ctx, page)
+	found := false
+	for _, iss := range issues {
+		if iss.CheckName == "structured-data/google-missing-required" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected google-missing-required, got %+v", issues)
+	}
+}
+
+func TestDeepStructuredDataChecker_NotGoogleEligible(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
+	ctx := context.Background()
+
+	page := htmlPage(`<html><head><script type="application/ld+json">{
+		"@context":"https://schema.org",
+		"@type":"Organization",
+		"name":"Acme"
+	}</script></head><body></body></html>`)
+
+	issues := checker.Check(ctx, page)
+	found := false
+	for _, iss := range issues {
+		if iss.CheckName == "structured-data/not-google-eligible" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected not-google-eligible, got %+v", issues)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Cross-object validation tests
+// ---------------------------------------------------------------------------
+
+func TestDeepStructuredDataChecker_DuplicateType(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
+	ctx := context.Background()
+
+	page := htmlPage(`<html><head>
+		<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"One","datePublished":"2024-01-01","author":"A"}</script>
+		<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Two","datePublished":"2024-01-01","author":"B"}</script>
+	</head><body></body></html>`)
+
+	issues := checker.Check(ctx, page)
+	found := false
+	for _, iss := range issues {
+		if iss.CheckName == "structured-data/duplicate-type" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected duplicate-type, got %+v", issues)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Nested type validation tests
+// ---------------------------------------------------------------------------
+
+func TestDeepStructuredDataChecker_NestedType(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
+	ctx := context.Background()
+
+	page := htmlPage(`<html><head><script type="application/ld+json">{
+		"@context":"https://schema.org",
+		"@type":"Article",
+		"headline":"Test",
+		"datePublished":"2024-01-15",
+		"author":{"@type":"Event","name":"Wrong"}
+	}</script></head><body></body></html>`)
+
+	issues := checker.Check(ctx, page)
+	found := false
+	for _, iss := range issues {
+		if iss.CheckName == "structured-data/invalid-nested-type" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected invalid-nested-type, got %+v", issues)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Enum validation tests
+// ---------------------------------------------------------------------------
+
+func TestDeepStructuredDataChecker_EnumValidation(t *testing.T) {
+	checker := NewDeepStructuredDataChecker(schema.Load(""))
+	ctx := context.Background()
+
+	page := htmlPage(`<html><head><script type="application/ld+json">{
+		"@context":"https://schema.org",
+		"@type":"Event",
+		"name":"Conf",
+		"startDate":"2024-09-01",
+		"location":"NYC",
+		"eventStatus":"EventRunning"
+	}</script></head><body></body></html>`)
+
+	issues := checker.Check(ctx, page)
+	found := false
+	for _, iss := range issues {
+		if iss.CheckName == "structured-data/invalid-enum-value" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected invalid-enum-value, got %+v", issues)
 	}
 }

@@ -32,6 +32,7 @@ var (
 	flagWatch          bool
 	flagWatchInterval  time.Duration
 	flagRulesFile      string
+	flagSchemaPath     string
 )
 
 // Command returns the cli.Command for the check subcommand.
@@ -118,6 +119,13 @@ func Command() *cli.Command {
 				Usage:       "path to CEL custom rules YAML file",
 				Destination: &flagRulesFile,
 			},
+			&cli.StringFlag{
+				Name:        "schema-path",
+				Value:       "",
+				Usage:       "path to custom Schema.org definitions JSON file",
+				Sources:     cli.EnvVars("SCRY_SCHEMA_PATH"),
+				Destination: &flagSchemaPath,
+			},
 		},
 		Action: runCheck,
 	}
@@ -190,7 +198,7 @@ func runSingleCheck(ctx context.Context, cfg *config.Config, fetcher crawler.Fet
 
 	// Run audit checks.
 	l.Info().Msg("running audit checks")
-	registry := audit.DefaultRegistry(l)
+	registry := audit.DefaultRegistry(l, cfg.SchemaPath)
 
 	// Load and register custom CEL rules if configured.
 	if cfg.RulesFile != "" {
@@ -255,6 +263,9 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	}
 	if cmd.IsSet("rules") {
 		cfg.RulesFile = flagRulesFile
+	}
+	if cmd.IsSet("schema-path") {
+		cfg.SchemaPath = flagSchemaPath
 	}
 
 	cmdutil.ApplyGlobalOverrides(cmd, cfg)

@@ -59,6 +59,9 @@ type Config struct {
 	// Custom rules.
 	RulesFile string `env:"SCRY_RULES_FILE" envDefault:""`
 
+	// Schema override.
+	SchemaPath string `env:"SCRY_SCHEMA_PATH" envDefault:""`
+
 	// Baseline comparison.
 	SaveBaselineFile    string `env:"SCRY_SAVE_BASELINE"    envDefault:""`
 	CompareBaselineFile string `env:"SCRY_COMPARE_BASELINE" envDefault:""`

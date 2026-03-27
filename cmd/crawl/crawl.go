@@ -43,6 +43,7 @@ var (
 	flagResume          string
 	flagIncremental     string
 	flagRulesFile       string
+	flagSchemaPath      string
 	flagSaveBaseline    string
 	flagCompareBaseline string
 )
@@ -198,6 +199,13 @@ func Command() *cli.Command {
 				Destination: &flagRulesFile,
 			},
 			&cli.StringFlag{
+				Name:        "schema-path",
+				Value:       "",
+				Usage:       "path to custom Schema.org definitions JSON file",
+				Sources:     cli.EnvVars("SCRY_SCHEMA_PATH"),
+				Destination: &flagSchemaPath,
+			},
+			&cli.StringFlag{
 				Name:        "save-baseline",
 				Value:       "",
 				Usage:       "save issues to baseline file for future comparison",
@@ -248,7 +256,7 @@ func runCrawl(ctx context.Context, cmd *cli.Command) error {
 
 	// Run audit checks.
 	l.Info().Msg("running audit checks")
-	registry := audit.DefaultRegistry(l)
+	registry := audit.DefaultRegistry(l, cfg.SchemaPath)
 
 	// Load and register custom CEL rules if configured.
 	if cfg.RulesFile != "" {
@@ -372,6 +380,9 @@ func applyFlagOverrides(cmd *cli.Command, cfg *config.Config) {
 	}
 	if cmd.IsSet("rules") {
 		cfg.RulesFile = flagRulesFile
+	}
+	if cmd.IsSet("schema-path") {
+		cfg.SchemaPath = flagSchemaPath
 	}
 	if cmd.IsSet("save-baseline") {
 		cfg.SaveBaselineFile = flagSaveBaseline
