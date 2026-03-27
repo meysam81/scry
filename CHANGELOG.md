@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.3](https://github.com/meysam81/scry/compare/v0.0.2...v0.0.3) (2026-03-27)
+
+
+### Features
+
+* add deep structured-data inspection ([f84d59a](https://github.com/meysam81/scry/commit/f84d59adedc74778c2a4bf2c932d3d2333e1f19e))
+
+
+### Bug Fixes
+
+* **CI:** make sec happy ([8dd0435](https://github.com/meysam81/scry/commit/8dd04356b1a5d0b89ad677c8dd9e0a0b0477abd7))
+* **deps:** update module github.com/urfave/cli/v3 to v3.8.0 ([#11](https://github.com/meysam81/scry/issues/11)) ([8f9b4c5](https://github.com/meysam81/scry/commit/8f9b4c50d750129abdfe0a13ce9ff4cd8878578f))
+
 ## [0.0.2](https://github.com/meysam81/scry/compare/v0.0.1...v0.0.2) (2026-03-25)
 
 
