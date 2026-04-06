@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.55.0
+    rev: v1.58.0
     hooks:
       - id: oxlint
         verbose: false
@@ -88,11 +88,11 @@ repos:
       # - id: go-build
       - id: go-mod-tidy
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.11
+    rev: v1.7.12
     hooks:
       - id: actionlint
   - repo: https://github.com/reteps/dockerfmt
-    rev: v0.3.9
+    rev: v0.5.2
     hooks:
       - id: dockerfmt
         args:
