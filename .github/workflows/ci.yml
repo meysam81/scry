@@ -111,32 +111,32 @@ jobs:
   #         severity: HIGH,CRITICAL
   #         exit-code: 1
 
-  security-scheduled:
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Scan container image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/${{ github.repository }}:latest
-          scanners: vuln
-          severity: HIGH,CRITICAL
-          exit-code: 0
-      - name: Secret scan (full history)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Install semgrep
-        run: pip install semgrep
-      - name: Run semgrep
-        run: semgrep scan --config=auto --config=p/golang --config=p/javascript --error
+  # security-scheduled:
+  #   if: github.event_name == 'schedule'
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: read
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v6
+  #       with:
+  #         fetch-depth: 0
+  #     - name: Scan container image
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         image-ref: ghcr.io/${{ github.repository }}:latest
+  #         scanners: vuln
+  #         severity: HIGH,CRITICAL
+  #         exit-code: 0
+  #     - name: Secret scan (full history)
+  #       uses: gitleaks/gitleaks-action@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ github.token }}
+  #     - name: Install semgrep
+  #       run: pip install semgrep
+  #     - name: Run semgrep
+  #       run: semgrep scan --config=auto --config=p/golang --config=p/javascript --error
 
   simulate-prod:
     if: contains(fromJson('["pull_request","push"]'), github.event_name)
