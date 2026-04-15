@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	github.com/caarlos0/env/v11 v11.4.0
-	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/charmbracelet/lipgloss/v2 v2.0.3
 	github.com/go-rod/rod v0.116.2
 	github.com/google/cel-go v0.27.0
 	github.com/jedib0t/go-pretty/v6 v6.7.8
