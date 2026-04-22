@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/meysam81/scry/core/model"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/core/model"
 )
 
 // Score thresholds for converting Lighthouse scores to issues.

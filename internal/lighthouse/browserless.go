@@ -12,8 +12,8 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/core/model"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 // browserlessTimeout is the default timeout for browserless requests.

@@ -9,13 +9,13 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/core/checks"
+	"github.com/meysam81/scry/core/rules"
 	"github.com/meysam81/scry/internal/baseline"
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/crawler"
 	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/internal/metrics"
-	"github.com/meysam81/scry/core/rules"
 )
 
 var (

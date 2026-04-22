@@ -12,8 +12,8 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 
-	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/core/model"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 // defaultContentType is the content type returned for all browser-fetched pages.

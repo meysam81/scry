@@ -1,13 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "strict": true,
+    "noEmit": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "types": ["node"],
-    "noEmit": true
+    "strict": true,
+    "target": "ES2022",
+    "types": [
+      "node"
+    ]
   },
-  "include": ["vite.config.ts", "manifest.config.ts", "scripts/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "manifest.config.ts",
+    "scripts/**/*.ts"
+  ]
 }

@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/core/model"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 func TestPSIClientRun_Success(t *testing.T) {

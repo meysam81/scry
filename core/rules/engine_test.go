@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/core/model"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 func TestEvaluate_StatusCode(t *testing.T) {

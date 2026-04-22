@@ -8,8 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/core/model"
+	"github.com/meysam81/scry/internal/logger"
 	"golang.org/x/net/html"
 )
 

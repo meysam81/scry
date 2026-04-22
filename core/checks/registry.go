@@ -7,9 +7,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/meysam81/scry/internal/logger"
 	"github.com/meysam81/scry/core/model"
 	"github.com/meysam81/scry/core/schema"
+	"github.com/meysam81/scry/internal/logger"
 )
 
 // Checker runs checks against a single crawled page.
