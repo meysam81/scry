@@ -4,8 +4,8 @@
  * current page. Mirrors the density of ahrefs' SERP overview while staying
  * on-brand with airy whitespace + display serif for big numbers.
  */
-import { computed } from 'vue';
-import type { PageSnapshot } from '@/schemas/page';
+import { computed } from "vue";
+import type { PageSnapshot } from "@/schemas/page";
 
 const props = defineProps<{ snapshot: PageSnapshot | null }>();
 
@@ -19,15 +19,27 @@ const facts = computed<Fact[]>(() => {
   const m = props.snapshot?.html_meta;
   if (!m) return [];
   return [
-    { label: 'Words', value: m.word_count.toLocaleString(), hint: 'Body text length' },
-    { label: 'Headings', value: `${m.h1_count} H1 · ${m.h2_count} H2` },
-    { label: 'Images', value: m.img_count, hint: `${m.img_without_alt} missing alt` },
-    { label: 'Links', value: m.link_count, hint: `${m.external_link_count} external` },
-    { label: 'Schemas', value: m.json_ld_count, hint: 'JSON-LD blocks' },
     {
-      label: 'Tech',
+      label: "Words",
+      value: m.word_count.toLocaleString(),
+      hint: "Body text length",
+    },
+    { label: "Headings", value: `${m.h1_count} H1 · ${m.h2_count} H2` },
+    {
+      label: "Images",
+      value: m.img_count,
+      hint: `${m.img_without_alt} missing alt`,
+    },
+    {
+      label: "Links",
+      value: m.link_count,
+      hint: `${m.external_link_count} external`,
+    },
+    { label: "Schemas", value: m.json_ld_count, hint: "JSON-LD blocks" },
+    {
+      label: "Tech",
       value: props.snapshot?.technologies.length ?? 0,
-      hint: 'Detected stack items',
+      hint: "Detected stack items",
     },
   ];
 });

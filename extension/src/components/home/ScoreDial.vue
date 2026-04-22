@@ -3,22 +3,22 @@
  * Big editorial serif score dial. Colour comes from a single token derived
  * from the numeric grade so other surfaces can depend on the same mapping.
  */
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps<{
   score: number;
-  grade: 'A' | 'B' | 'C' | 'D' | 'F';
+  grade: "A" | "B" | "C" | "D" | "F";
   critical: number;
   warning: number;
   info: number;
 }>();
 
-const GRADE_TOKEN: Record<'A' | 'B' | 'C' | 'D' | 'F', string> = {
-  A: 'var(--color-success)',
-  B: 'var(--color-success)',
-  C: 'var(--color-warning)',
-  D: 'var(--color-warning)',
-  F: 'var(--color-critical)',
+const GRADE_TOKEN: Record<"A" | "B" | "C" | "D" | "F", string> = {
+  A: "var(--color-success)",
+  B: "var(--color-success)",
+  C: "var(--color-warning)",
+  D: "var(--color-warning)",
+  F: "var(--color-critical)",
 };
 
 const accent = computed(() => GRADE_TOKEN[props.grade]);
@@ -142,9 +142,15 @@ const dash = computed(() => (circumference * props.score) / 100);
   height: 8px;
   border-radius: var(--radius-full);
 }
-.lg-dot[data-kind='critical'] { background: var(--color-critical); }
-.lg-dot[data-kind='warning']  { background: var(--color-warning); }
-.lg-dot[data-kind='info']     { background: var(--color-info); }
+.lg-dot[data-kind="critical"] {
+  background: var(--color-critical);
+}
+.lg-dot[data-kind="warning"] {
+  background: var(--color-warning);
+}
+.lg-dot[data-kind="info"] {
+  background: var(--color-info);
+}
 
 .lg-label {
   color: var(--color-text-muted);

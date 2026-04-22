@@ -3,8 +3,8 @@
  * Renders structured-data findings: OG/Twitter card meta + JSON-LD block
  * count. Pairs with the issues tab for Schema.org deep-validation details.
  */
-import { computed } from 'vue';
-import type { PageSnapshot } from '@/schemas/page';
+import { computed } from "vue";
+import type { PageSnapshot } from "@/schemas/page";
 
 const props = defineProps<{ snapshot: PageSnapshot | null }>();
 

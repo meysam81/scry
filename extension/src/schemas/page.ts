@@ -1,7 +1,7 @@
 // The page snapshot the content script collects and hands to the background.
 // Shape intentionally mirrors core/model/model.go so the Go side can consume
 // it with a single json.Unmarshal.
-import { z } from 'zod';
+import { z } from "zod";
 
 export const HeadersSchema = z.record(z.string(), z.array(z.string()));
 export type Headers = z.infer<typeof HeadersSchema>;
@@ -9,7 +9,7 @@ export type Headers = z.infer<typeof HeadersSchema>;
 export const PageSchema = z.object({
   url: z.string(),
   status_code: z.number().int(),
-  content_type: z.string().default(''),
+  content_type: z.string().default(""),
   redirect_chain: z.array(z.string()).optional().default([]),
   headers: HeadersSchema.default({}),
   links: z.array(z.string()).default([]),
@@ -26,10 +26,10 @@ export const PageSnapshotSchema = z.object({
   body: z.string(),
   html_meta: z
     .object({
-      title: z.string().optional().default(''),
-      description: z.string().optional().default(''),
-      lang: z.string().optional().default(''),
-      canonical: z.string().optional().default(''),
+      title: z.string().optional().default(""),
+      description: z.string().optional().default(""),
+      lang: z.string().optional().default(""),
+      canonical: z.string().optional().default(""),
       og: z.record(z.string(), z.string()).default({}),
       twitter: z.record(z.string(), z.string()).default({}),
       json_ld_count: z.number().default(0),

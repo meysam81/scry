@@ -3,28 +3,29 @@
  * The "top N issues you should fix right now" list on Home. Surfaces the
  * most punishing issues with a one-tap copy-check-name affordance.
  */
-import { computed } from 'vue';
-import type { Issue } from '@/schemas/audit';
-import SeverityChip from '@/components/shared/SeverityChip.vue';
+import { computed } from "vue";
+import type { Issue } from "@/schemas/audit";
+import SeverityChip from "@/components/shared/SeverityChip.vue";
 
-const props = withDefaults(
-  defineProps<{ issues: Issue[]; max?: number }>(),
-  { max: 4 },
-);
+const props = withDefaults(defineProps<{ issues: Issue[]; max?: number }>(), {
+  max: 4,
+});
 
 const SEVERITY_RANK = { critical: 0, warning: 1, info: 2 };
 const top = computed(() =>
   [...props.issues]
-    .sort(
-      (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity],
-    )
+    .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
     .slice(0, props.max),
 );
 </script>
 
 <template>
   <ul v-if="top.length" class="list">
-    <li v-for="issue in top" :key="`${issue.check_name}-${issue.url}`" class="item">
+    <li
+      v-for="issue in top"
+      :key="`${issue.check_name}-${issue.url}`"
+      class="item"
+    >
       <SeverityChip :severity="issue.severity" compact />
       <div class="content">
         <p class="msg">{{ issue.message }}</p>

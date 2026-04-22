@@ -3,22 +3,30 @@
  * Full issues table. Filters by severity and category. Issues grouped by
  * check name so repeated hits on the same rule collapse.
  */
-import { computed, ref } from 'vue';
-import type { Issue, Severity } from '@/schemas/audit';
-import { categoryFor, CATEGORIES, CATEGORY_ORDER, type CategoryKey } from '@/lib/categories';
-import SeverityChip from '@/components/shared/SeverityChip.vue';
-import ScryIcon from '@/components/shared/ScryIcon.vue';
+import { computed, ref } from "vue";
+import type { Issue, Severity } from "@/schemas/audit";
+import {
+  categoryFor,
+  CATEGORIES,
+  CATEGORY_ORDER,
+  type CategoryKey,
+} from "@/lib/categories";
+import SeverityChip from "@/components/shared/SeverityChip.vue";
+import ScryIcon from "@/components/shared/ScryIcon.vue";
 
 const props = defineProps<{ issues: Issue[] }>();
 
-const severityFilter = ref<Severity | 'all'>('all');
-const categoryFilter = ref<CategoryKey | 'all'>('all');
+const severityFilter = ref<Severity | "all">("all");
+const categoryFilter = ref<CategoryKey | "all">("all");
 
 const filtered = computed(() =>
   props.issues.filter((i) => {
-    if (severityFilter.value !== 'all' && i.severity !== severityFilter.value)
+    if (severityFilter.value !== "all" && i.severity !== severityFilter.value)
       return false;
-    if (categoryFilter.value !== 'all' && categoryFor(i.check_name) !== categoryFilter.value)
+    if (
+      categoryFilter.value !== "all" &&
+      categoryFor(i.check_name) !== categoryFilter.value
+    )
       return false;
     return true;
   }),
@@ -30,11 +38,11 @@ const availableCategories = computed(() => {
   return CATEGORY_ORDER.filter((c) => seen.has(c));
 });
 
-const SEVERITY_OPTIONS: Array<{ value: Severity | 'all'; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'critical', label: 'Critical' },
-  { value: 'warning', label: 'Warning' },
-  { value: 'info', label: 'Info' },
+const SEVERITY_OPTIONS: Array<{ value: Severity | "all"; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "critical", label: "Critical" },
+  { value: "warning", label: "Warning" },
+  { value: "info", label: "Info" },
 ];
 
 const expanded = ref<Set<string>>(new Set());
@@ -96,9 +104,7 @@ function toggle(key: string) {
         </div>
       </li>
     </ul>
-    <p v-else class="empty">
-      Nothing matches these filters.
-    </p>
+    <p v-else class="empty">Nothing matches these filters.</p>
   </div>
 </template>
 

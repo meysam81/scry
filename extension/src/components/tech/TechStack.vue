@@ -4,46 +4,46 @@
  * order everywhere. Tech strings come through the pipeline as "category:Name"
  * so we can split them without a lookup table.
  */
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps<{ technologies: string[] }>();
 
 type Grouped = Record<string, string[]>;
 
 const CATEGORY_LABEL: Record<string, string> = {
-  framework: 'Framework',
-  cms: 'CMS',
-  analytics: 'Analytics',
-  'tag-manager': 'Tag Managers',
-  cdn: 'CDN',
-  server: 'Server',
-  ecommerce: 'Commerce',
-  'ui-library': 'UI Library',
-  advertising: 'Advertising',
-  font: 'Fonts',
-  search: 'Search',
+  framework: "Framework",
+  cms: "CMS",
+  analytics: "Analytics",
+  "tag-manager": "Tag Managers",
+  cdn: "CDN",
+  server: "Server",
+  ecommerce: "Commerce",
+  "ui-library": "UI Library",
+  advertising: "Advertising",
+  font: "Fonts",
+  search: "Search",
 };
 
 const ORDER = [
-  'framework',
-  'cms',
-  'ui-library',
-  'analytics',
-  'tag-manager',
-  'cdn',
-  'server',
-  'ecommerce',
-  'search',
-  'advertising',
-  'font',
+  "framework",
+  "cms",
+  "ui-library",
+  "analytics",
+  "tag-manager",
+  "cdn",
+  "server",
+  "ecommerce",
+  "search",
+  "advertising",
+  "font",
 ];
 
 const grouped = computed<Grouped>(() => {
   const g: Grouped = {};
   for (const t of props.technologies) {
-    const [cat, ...rest] = t.split(':');
+    const [cat, ...rest] = t.split(":");
     if (!cat || rest.length === 0) continue;
-    (g[cat] ??= []).push(rest.join(':'));
+    (g[cat] ??= []).push(rest.join(":"));
   }
   for (const k of Object.keys(g)) g[k].sort();
   return g;

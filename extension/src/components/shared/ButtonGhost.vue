@@ -5,11 +5,11 @@
  */
 withDefaults(
   defineProps<{
-    variant?: 'primary' | 'ghost' | 'icon';
-    size?: 'sm' | 'md';
+    variant?: "primary" | "ghost" | "icon";
+    size?: "sm" | "md";
     disabled?: boolean;
   }>(),
-  { variant: 'ghost', size: 'md' },
+  { variant: "ghost", size: "md" },
 );
 </script>
 
@@ -41,40 +41,40 @@ withDefaults(
   user-select: none;
 }
 
-.btn[data-size='sm'] {
+.btn[data-size="sm"] {
   height: 28px;
   padding: 0 var(--space-3);
   font-size: var(--font-size-xs);
 }
-.btn[data-size='md'] {
+.btn[data-size="md"] {
   height: 32px;
   padding: 0 var(--space-4);
   font-size: var(--font-size-sm);
 }
 
-.btn[data-variant='primary'] {
+.btn[data-variant="primary"] {
   background: var(--color-accent);
   color: var(--color-text-on-accent);
 }
-.btn[data-variant='primary']:hover:not(:disabled) {
+.btn[data-variant="primary"]:hover:not(:disabled) {
   background: var(--color-accent-hover);
 }
-.btn[data-variant='primary']:active:not(:disabled) {
+.btn[data-variant="primary"]:active:not(:disabled) {
   background: var(--color-accent-active);
 }
 
-.btn[data-variant='ghost'] {
+.btn[data-variant="ghost"] {
   background: transparent;
   color: var(--color-text-muted);
   border-color: var(--color-border);
 }
-.btn[data-variant='ghost']:hover:not(:disabled) {
+.btn[data-variant="ghost"]:hover:not(:disabled) {
   color: var(--color-text);
   border-color: var(--color-border-strong);
   background: var(--color-bg-hover);
 }
 
-.btn[data-variant='icon'] {
+.btn[data-variant="icon"] {
   width: 32px;
   height: 32px;
   padding: 0;
@@ -82,7 +82,7 @@ withDefaults(
   background: transparent;
   color: var(--color-text-muted);
 }
-.btn[data-variant='icon']:hover:not(:disabled) {
+.btn[data-variant="icon"]:hover:not(:disabled) {
   color: var(--color-text);
   background: var(--color-bg-hover);
 }

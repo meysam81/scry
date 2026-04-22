@@ -1,14 +1,14 @@
 // Content script: runs in the active tab, captures DOM + extracts metadata,
 // ships a PageSnapshot to the service worker. Pure data collection; never
 // calls into WASM (that lives in the SW, so one WASM instance serves all tabs).
-import type { PageSnapshot } from '@/schemas/page';
-import { detectTech, type DetectInput } from '@/lib/tech-detect';
+import type { PageSnapshot } from "@/schemas/page";
+import { detectTech, type DetectInput } from "@/lib/tech-detect";
 
 function readMeta(name: string): string {
   return (
     document
       .querySelector<HTMLMetaElement>(`meta[name="${name}" i]`)
-      ?.content?.trim() ?? ''
+      ?.content?.trim() ?? ""
   );
 }
 
@@ -17,7 +17,7 @@ function collectOg(): Record<string, string> {
   document
     .querySelectorAll<HTMLMetaElement>('meta[property^="og:" i]')
     .forEach((el) => {
-      const key = el.getAttribute('property')?.slice(3);
+      const key = el.getAttribute("property")?.slice(3);
       if (key) out[key] = el.content.trim();
     });
   return out;
@@ -28,7 +28,7 @@ function collectTwitter(): Record<string, string> {
   document
     .querySelectorAll<HTMLMetaElement>('meta[name^="twitter:" i]')
     .forEach((el) => {
-      const key = el.getAttribute('name')?.slice(8);
+      const key = el.getAttribute("name")?.slice(8);
       if (key) out[key] = el.content.trim();
     });
   return out;
@@ -36,7 +36,7 @@ function collectTwitter(): Record<string, string> {
 
 function collectLinks(): string[] {
   const seen = new Set<string>();
-  document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => {
+  document.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((a) => {
     try {
       const abs = new URL(a.href, window.location.href).toString();
       seen.add(abs);
@@ -50,9 +50,9 @@ function collectLinks(): string[] {
 function collectAssets(): string[] {
   const seen = new Set<string>();
   document
-    .querySelectorAll<HTMLImageElement | HTMLScriptElement | HTMLLinkElement>(
-      'img[src], script[src], link[rel="stylesheet"][href]',
-    )
+    .querySelectorAll<
+      HTMLImageElement | HTMLScriptElement | HTMLLinkElement
+    >('img[src], script[src], link[rel="stylesheet"][href]')
     .forEach((el) => {
       const src =
         (el as HTMLImageElement).src ||
@@ -72,30 +72,30 @@ function collectMetaTags(): Array<{
   property?: string;
   content?: string;
 }> {
-  return Array.from(document.querySelectorAll('meta')).map((m) => ({
-    name: m.getAttribute('name') ?? undefined,
-    property: m.getAttribute('property') ?? undefined,
-    content: m.getAttribute('content') ?? undefined,
+  return Array.from(document.querySelectorAll("meta")).map((m) => ({
+    name: m.getAttribute("name") ?? undefined,
+    property: m.getAttribute("property") ?? undefined,
+    content: m.getAttribute("content") ?? undefined,
   }));
 }
 
 function collectScripts(): string[] {
-  return Array.from(document.querySelectorAll<HTMLScriptElement>('script[src]'))
+  return Array.from(document.querySelectorAll<HTMLScriptElement>("script[src]"))
     .map((s) => s.src)
     .filter(Boolean);
 }
 
 function buildSnapshot(): PageSnapshot {
   const html = document.documentElement.outerHTML;
-  const bodyText = document.body?.innerText ?? '';
+  const bodyText = document.body?.innerText ?? "";
 
-  const imgs = document.querySelectorAll<HTMLImageElement>('img');
-  const imgWithoutAlt = Array.from(imgs).filter(
-    (i) => !i.alt?.trim(),
-  ).length;
+  const imgs = document.querySelectorAll<HTMLImageElement>("img");
+  const imgWithoutAlt = Array.from(imgs).filter((i) => !i.alt?.trim()).length;
 
   const origin = window.location.origin;
-  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'))
+  const links = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>("a[href]"),
+  )
     .map((a) => a.href)
     .filter(Boolean);
   const externalLinks = links.filter((l) => {
@@ -120,7 +120,7 @@ function buildSnapshot(): PageSnapshot {
     page: {
       url: window.location.href,
       status_code: 200, // refined by the SW from webRequest
-      content_type: document.contentType || 'text/html',
+      content_type: document.contentType || "text/html",
       redirect_chain: [],
       headers: {},
       links: collectLinks(),
@@ -133,19 +133,18 @@ function buildSnapshot(): PageSnapshot {
     body: html,
     html_meta: {
       title: document.title.trim(),
-      description: readMeta('description'),
-      lang: document.documentElement.lang || '',
+      description: readMeta("description"),
+      lang: document.documentElement.lang || "",
       canonical:
-        document
-          .querySelector<HTMLLinkElement>('link[rel="canonical" i]')
-          ?.href ?? '',
+        document.querySelector<HTMLLinkElement>('link[rel="canonical" i]')
+          ?.href ?? "",
       og: collectOg(),
       twitter: collectTwitter(),
       json_ld_count: document.querySelectorAll(
         'script[type="application/ld+json"]',
       ).length,
-      h1_count: document.querySelectorAll('h1').length,
-      h2_count: document.querySelectorAll('h2').length,
+      h1_count: document.querySelectorAll("h1").length,
+      h2_count: document.querySelectorAll("h2").length,
       img_count: imgs.length,
       img_without_alt: imgWithoutAlt,
       link_count: links.length,
@@ -159,12 +158,12 @@ function buildSnapshot(): PageSnapshot {
 // Respond on demand when the SW asks for a snapshot. Using request-response
 // instead of fire-and-forget means the SW only collects when a UI is open.
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg?.kind === 'bg:request-snapshot') {
+  if (msg?.kind === "bg:request-snapshot") {
     try {
       const snapshot = buildSnapshot();
-      sendResponse({ kind: 'content:snapshot', snapshot });
+      sendResponse({ kind: "content:snapshot", snapshot });
     } catch (e) {
-      sendResponse({ kind: 'content:error', error: String(e) });
+      sendResponse({ kind: "content:error", error: String(e) });
     }
     return true; // keep channel open for async response
   }

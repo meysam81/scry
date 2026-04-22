@@ -8,15 +8,19 @@ withDefaults(
   defineProps<{
     title?: string;
     subtitle?: string;
-    variant?: 'default' | 'muted' | 'flush';
+    variant?: "default" | "muted" | "flush";
     compact?: boolean;
   }>(),
-  { variant: 'default' },
+  { variant: "default" },
 );
 </script>
 
 <template>
-  <section class="panel" :data-variant="variant" :data-compact="compact || undefined">
+  <section
+    class="panel"
+    :data-variant="variant"
+    :data-compact="compact || undefined"
+  >
     <header v-if="title || $slots.header" class="head">
       <slot name="header">
         <div>
@@ -44,12 +48,12 @@ withDefaults(
   flex-direction: column;
 }
 
-.panel[data-variant='muted'] {
+.panel[data-variant="muted"] {
   background: var(--color-bg-surface-2);
   border-color: var(--color-border-subtle);
 }
 
-.panel[data-variant='flush'] {
+.panel[data-variant="flush"] {
   background: transparent;
   border: none;
   border-radius: 0;
@@ -98,8 +102,8 @@ withDefaults(
   padding: var(--space-4);
 }
 
-.panel[data-variant='flush'] .body,
-.panel[data-variant='flush'] .head {
+.panel[data-variant="flush"] .body,
+.panel[data-variant="flush"] .head {
   padding: 0;
 }
 </style>

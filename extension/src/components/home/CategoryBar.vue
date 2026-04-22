@@ -4,7 +4,7 @@
  * issue severity distribution as a horizontal bar, with the category's
  * accent pulled straight from a CSS var.
  */
-import type { CategoryScore } from '@/lib/scoring';
+import type { CategoryScore } from "@/lib/scoring";
 
 const props = defineProps<{ entry: CategoryScore }>();
 
@@ -20,7 +20,10 @@ function pct(n: number) {
       <span class="label">{{ entry.label }}</span>
     </div>
     <div class="bar">
-      <span class="seg seg-crit" :style="{ width: `${pct(entry.critical)}%` }" />
+      <span
+        class="seg seg-crit"
+        :style="{ width: `${pct(entry.critical)}%` }"
+      />
       <span class="seg seg-warn" :style="{ width: `${pct(entry.warning)}%` }" />
       <span class="seg seg-info" :style="{ width: `${pct(entry.info)}%` }" />
     </div>
@@ -83,9 +86,15 @@ function pct(n: number) {
   height: 100%;
   transition: width var(--duration-medium) var(--ease-out);
 }
-.seg-crit { background: var(--color-critical); }
-.seg-warn { background: var(--color-warning); }
-.seg-info { background: var(--color-info); }
+.seg-crit {
+  background: var(--color-critical);
+}
+.seg-warn {
+  background: var(--color-warning);
+}
+.seg-info {
+  background: var(--color-info);
+}
 
 .score {
   display: flex;

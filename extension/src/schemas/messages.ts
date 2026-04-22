@@ -1,21 +1,21 @@
 // Typed contracts for every chrome.runtime.sendMessage exchange between
 // service worker, content script, and UI surfaces.
-import { z } from 'zod';
-import { PageSnapshotSchema } from './page';
-import { IssueSchema } from './audit';
+import { z } from "zod";
+import { PageSnapshotSchema } from "./page";
+import { IssueSchema } from "./audit";
 
 export const MsgContentSnapshotSchema = z.object({
-  kind: z.literal('content:snapshot'),
+  kind: z.literal("content:snapshot"),
   snapshot: PageSnapshotSchema,
 });
 
 export const MsgRequestAuditSchema = z.object({
-  kind: z.literal('ui:request-audit'),
+  kind: z.literal("ui:request-audit"),
   tabId: z.number(),
 });
 
 export const MsgAuditResultSchema = z.object({
-  kind: z.literal('bg:audit-result'),
+  kind: z.literal("bg:audit-result"),
   tabId: z.number(),
   url: z.string(),
   issues: z.array(IssueSchema),
@@ -25,17 +25,17 @@ export const MsgAuditResultSchema = z.object({
 });
 
 export const MsgAuditErrorSchema = z.object({
-  kind: z.literal('bg:audit-error'),
+  kind: z.literal("bg:audit-error"),
   tabId: z.number(),
   error: z.string(),
 });
 
 export const MsgRequestRefreshSchema = z.object({
-  kind: z.literal('ui:refresh'),
+  kind: z.literal("ui:refresh"),
   tabId: z.number(),
 });
 
-export const AnyMessageSchema = z.discriminatedUnion('kind', [
+export const AnyMessageSchema = z.discriminatedUnion("kind", [
   MsgContentSnapshotSchema,
   MsgRequestAuditSchema,
   MsgAuditResultSchema,

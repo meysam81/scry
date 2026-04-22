@@ -6,11 +6,7 @@
     "exactOptionalPropertyTypes": false,
     "isolatedModules": true,
     "jsx": "preserve",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
@@ -19,19 +15,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
-    "types": [
-      "chrome",
-      "vite/client",
-      "bun-types"
-    ],
+    "types": ["chrome", "vite/client", "bun-types"],
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": true
   },

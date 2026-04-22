@@ -1,11 +1,14 @@
-@import './tokens.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "./tokens.css";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   background: var(--color-bg-base);
@@ -16,7 +19,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: 'cv08', 'cv09', 'ss01', 'ss03', 'tnum';
+  font-feature-settings: "cv08", "cv09", "ss01", "ss03", "tnum";
 }
 
 body {
@@ -47,7 +50,10 @@ a {
   text-decoration: none;
 }
 
-code, pre, kbd, samp {
+code,
+pre,
+kbd,
+samp {
   font-family: var(--font-mono);
   font-size: 0.92em;
 }
@@ -74,7 +80,16 @@ code, pre, kbd, samp {
 }
 
 /* Utility classes that only wrap tokens; no bespoke values. */
-.text-muted   { color: var(--color-text-muted); }
-.text-faint   { color: var(--color-text-faint); }
-.text-mono    { font-family: var(--font-mono); }
-.text-display { font-family: var(--font-display); letter-spacing: var(--letter-tight); }
+.text-muted {
+  color: var(--color-text-muted);
+}
+.text-faint {
+  color: var(--color-text-faint);
+}
+.text-mono {
+  font-family: var(--font-mono);
+}
+.text-display {
+  font-family: var(--font-display);
+  letter-spacing: var(--letter-tight);
+}

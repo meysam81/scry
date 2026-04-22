@@ -6,9 +6,9 @@
 //
 // Rule of thumb: never store derived state here — only raw captures. The
 // UI derives scores/categories/etc. off the raw issue list.
-import { WasmRuntime } from '@/lib/wasm-runtime';
-import { PageSnapshotSchema } from '@/schemas/page';
-import type { MsgAuditResult, MsgAuditError } from '@/schemas/messages';
+import { WasmRuntime } from "@/lib/wasm-runtime";
+import { PageSnapshotSchema } from "@/schemas/page";
+import type { MsgAuditResult, MsgAuditError } from "@/schemas/messages";
 
 type Headers = Record<string, string[]>;
 
@@ -24,8 +24,8 @@ interface HeaderCapture {
 const headerCache = new Map<number, HeaderCapture>();
 
 const wasm = new WasmRuntime({
-  wasmUrl: chrome.runtime.getURL('scry.wasm'),
-  shimUrl: chrome.runtime.getURL('wasm_exec.js'),
+  wasmUrl: chrome.runtime.getURL("scry.wasm"),
+  shimUrl: chrome.runtime.getURL("wasm_exec.js"),
 });
 
 // -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ const wasm = new WasmRuntime({
 // -----------------------------------------------------------------------------
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((err) => console.warn('[scry] setPanelBehavior failed', err));
+  .catch((err) => console.warn("[scry] setPanelBehavior failed", err));
 
 // -----------------------------------------------------------------------------
 // Header capture — chrome.webRequest.onResponseStarted fires before the page
@@ -42,13 +42,13 @@ chrome.sidePanel
 // -----------------------------------------------------------------------------
 chrome.webRequest.onResponseStarted.addListener(
   (details) => {
-    if (details.type !== 'main_frame') return;
+    if (details.type !== "main_frame") return;
     if (details.tabId < 0) return;
 
     const headers: Headers = {};
     for (const h of details.responseHeaders ?? []) {
       const key = h.name.toLowerCase();
-      (headers[key] ??= []).push(h.value ?? '');
+      (headers[key] ??= []).push(h.value ?? "");
     }
 
     headerCache.set(details.tabId, {
@@ -58,8 +58,8 @@ chrome.webRequest.onResponseStarted.addListener(
       capturedAt: Date.now(),
     });
   },
-  { urls: ['<all_urls>'] },
-  ['responseHeaders', 'extraHeaders'],
+  { urls: ["<all_urls>"] },
+  ["responseHeaders", "extraHeaders"],
 );
 
 chrome.tabs.onRemoved.addListener((tabId) => headerCache.delete(tabId));
@@ -71,42 +71,50 @@ chrome.tabs.onRemoved.addListener((tabId) => headerCache.delete(tabId));
 // -----------------------------------------------------------------------------
 async function requestSnapshot(tabId: number): Promise<unknown> {
   try {
-    return await chrome.tabs.sendMessage(tabId, { kind: 'bg:request-snapshot' });
+    return await chrome.tabs.sendMessage(tabId, {
+      kind: "bg:request-snapshot",
+    });
   } catch {
     // Content script not loaded: inject it programmatically.
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ['src/entrypoints/content/index.ts'],
+      files: ["src/entrypoints/content/index.ts"],
     });
-    return chrome.tabs.sendMessage(tabId, { kind: 'bg:request-snapshot' });
+    return chrome.tabs.sendMessage(tabId, { kind: "bg:request-snapshot" });
   }
 }
 
 // -----------------------------------------------------------------------------
 // Audit pipeline
 // -----------------------------------------------------------------------------
-async function runAudit(tabId: number): Promise<MsgAuditResult | MsgAuditError> {
+async function runAudit(
+  tabId: number,
+): Promise<MsgAuditResult | MsgAuditError> {
   const t0 = performance.now();
 
   let snapshotRaw: unknown;
   try {
     snapshotRaw = await requestSnapshot(tabId);
   } catch (e) {
-    return { kind: 'bg:audit-error', tabId, error: `snapshot failed: ${String(e)}` };
+    return {
+      kind: "bg:audit-error",
+      tabId,
+      error: `snapshot failed: ${String(e)}`,
+    };
   }
 
   // Trust-but-verify.
   const envelope =
-    snapshotRaw && typeof snapshotRaw === 'object' && 'snapshot' in snapshotRaw
+    snapshotRaw && typeof snapshotRaw === "object" && "snapshot" in snapshotRaw
       ? (snapshotRaw as { snapshot: unknown }).snapshot
       : null;
 
   const parsed = PageSnapshotSchema.safeParse(envelope);
   if (!parsed.success) {
     return {
-      kind: 'bg:audit-error',
+      kind: "bg:audit-error",
       tabId,
-      error: `invalid snapshot shape: ${parsed.error.issues[0]?.message ?? 'unknown'}`,
+      error: `invalid snapshot shape: ${parsed.error.issues[0]?.message ?? "unknown"}`,
     };
   }
 
@@ -122,14 +130,14 @@ async function runAudit(tabId: number): Promise<MsgAuditResult | MsgAuditError> 
   const auditData = await wasm.auditPage(snapshot.page, snapshot.body);
   if (!auditData) {
     return {
-      kind: 'bg:audit-error',
+      kind: "bg:audit-error",
       tabId,
-      error: 'WASM audit returned invalid data',
+      error: "WASM audit returned invalid data",
     };
   }
 
   return {
-    kind: 'bg:audit-result',
+    kind: "bg:audit-result",
     tabId,
     url: auditData.url || snapshot.page.url,
     issues: auditData.issues,
@@ -143,13 +151,13 @@ async function runAudit(tabId: number): Promise<MsgAuditResult | MsgAuditError> 
 // Message router
 // -----------------------------------------------------------------------------
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg?.kind === 'ui:request-audit' || msg?.kind === 'ui:refresh') {
+  if (msg?.kind === "ui:request-audit" || msg?.kind === "ui:refresh") {
     const tabId = Number(msg.tabId);
     if (!Number.isFinite(tabId)) {
       sendResponse({
-        kind: 'bg:audit-error',
+        kind: "bg:audit-error",
         tabId: 0,
-        error: 'missing tabId',
+        error: "missing tabId",
       } satisfies MsgAuditError);
       return false;
     }
@@ -157,7 +165,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .then(sendResponse)
       .catch((err) =>
         sendResponse({
-          kind: 'bg:audit-error',
+          kind: "bg:audit-error",
           tabId,
           error: String(err),
         } satisfies MsgAuditError),
@@ -169,5 +177,5 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // Warm the WASM runtime on install so the first audit feels snappy.
 chrome.runtime.onInstalled.addListener(() => {
-  wasm.boot().catch((err) => console.warn('[scry] WASM boot failed', err));
+  wasm.boot().catch((err) => console.warn("[scry] WASM boot failed", err));
 });

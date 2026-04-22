@@ -10,8 +10,8 @@ import {
   VersionSchema,
   ChecksListSchema,
   type AuditData,
-} from '@/schemas/audit';
-import type { Page } from '@/schemas/page';
+} from "@/schemas/audit";
+import type { Page } from "@/schemas/page";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -52,11 +52,11 @@ export class WasmRuntime {
   }
 
   async #bootOnce(): Promise<void> {
-    if (typeof globalThis.Go !== 'function') {
+    if (typeof globalThis.Go !== "function") {
       await import(/* @vite-ignore */ this.#opts.shimUrl);
     }
-    if (typeof globalThis.Go !== 'function') {
-      throw new Error('wasm_exec.js did not register globalThis.Go');
+    if (typeof globalThis.Go !== "function") {
+      throw new Error("wasm_exec.js did not register globalThis.Go");
     }
 
     const go = new globalThis.Go();
@@ -72,10 +72,10 @@ export class WasmRuntime {
     // the Go runtime sets them synchronously in main(), but "synchronously"
     // here means "on the first microtask after go.run() starts".
     for (let i = 0; i < 50; i++) {
-      if (typeof globalThis.scryAuditPage === 'function') return;
+      if (typeof globalThis.scryAuditPage === "function") return;
       await new Promise((r) => setTimeout(r, 10));
     }
-    throw new Error('scryAuditPage never materialised after boot');
+    throw new Error("scryAuditPage never materialised after boot");
   }
 
   async version() {

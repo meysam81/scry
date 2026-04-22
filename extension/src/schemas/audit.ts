@@ -1,9 +1,9 @@
 // Zod schemas at the WASM ↔ JS boundary. Every value crossing this line is
 // parsed, not cast — invalid data becomes `null`, never a runtime explosion.
 // These mirror core/model/model.go exactly.
-import { z } from 'zod';
+import { z } from "zod";
 
-export const SeveritySchema = z.enum(['critical', 'warning', 'info']);
+export const SeveritySchema = z.enum(["critical", "warning", "info"]);
 export type Severity = z.infer<typeof SeveritySchema>;
 
 export const IssueSchema = z.object({
@@ -11,7 +11,7 @@ export const IssueSchema = z.object({
   severity: SeveritySchema,
   message: z.string(),
   url: z.string(),
-  detail: z.string().optional().default(''),
+  detail: z.string().optional().default(""),
 });
 export type Issue = z.infer<typeof IssueSchema>;
 
@@ -49,7 +49,7 @@ export function parseEnvelope<T extends z.ZodTypeAny>(
   raw: unknown,
   dataSchema: T,
 ): z.infer<T> | null {
-  if (typeof raw !== 'string') return null;
+  if (typeof raw !== "string") return null;
 
   let parsed: unknown;
   try {

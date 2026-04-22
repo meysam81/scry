@@ -1,48 +1,48 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { useAuditStore } from '@/stores/audit';
-import { useActiveTab } from '@/composables/useActiveTab';
+import { computed, onMounted, ref, watch } from "vue";
+import { useAuditStore } from "@/stores/audit";
+import { useActiveTab } from "@/composables/useActiveTab";
 
-import Panel from '@/components/shared/Panel.vue';
-import ButtonGhost from '@/components/shared/ButtonGhost.vue';
-import ScryIcon, { type IconName } from '@/components/shared/ScryIcon.vue';
+import Panel from "@/components/shared/Panel.vue";
+import ButtonGhost from "@/components/shared/ButtonGhost.vue";
+import ScryIcon, { type IconName } from "@/components/shared/ScryIcon.vue";
 
-import ScoreDial from '@/components/home/ScoreDial.vue';
-import CategoryBar from '@/components/home/CategoryBar.vue';
-import CriticalList from '@/components/home/CriticalList.vue';
-import PageFacts from '@/components/home/PageFacts.vue';
+import ScoreDial from "@/components/home/ScoreDial.vue";
+import CategoryBar from "@/components/home/CategoryBar.vue";
+import CriticalList from "@/components/home/CriticalList.vue";
+import PageFacts from "@/components/home/PageFacts.vue";
 
-import TechStack from '@/components/tech/TechStack.vue';
-import IssueList from '@/components/issues/IssueList.vue';
-import HeadersTable from '@/components/headers/HeadersTable.vue';
-import SchemaView from '@/components/schema/SchemaView.vue';
+import TechStack from "@/components/tech/TechStack.vue";
+import IssueList from "@/components/issues/IssueList.vue";
+import HeadersTable from "@/components/headers/HeadersTable.vue";
+import SchemaView from "@/components/schema/SchemaView.vue";
 
 const store = useAuditStore();
 const { activeTab } = useActiveTab();
 
-type TabKey = 'home' | 'issues' | 'tech' | 'headers' | 'schema';
+type TabKey = "home" | "issues" | "tech" | "headers" | "schema";
 
 const TABS: Array<{ key: TabKey; label: string; icon: IconName }> = [
-  { key: 'home',    label: 'Overview', icon: 'zap' },
-  { key: 'issues',  label: 'Issues',   icon: 'list' },
-  { key: 'tech',    label: 'Tech',     icon: 'layers' },
-  { key: 'headers', label: 'Headers',  icon: 'code' },
-  { key: 'schema',  label: 'Schema',   icon: 'database' },
+  { key: "home", label: "Overview", icon: "zap" },
+  { key: "issues", label: "Issues", icon: "list" },
+  { key: "tech", label: "Tech", icon: "layers" },
+  { key: "headers", label: "Headers", icon: "code" },
+  { key: "schema", label: "Schema", icon: "database" },
 ];
 
-const current = ref<TabKey>('home');
+const current = ref<TabKey>("home");
 
 const hostname = computed(() => {
   try {
-    return new URL(store.url || activeTab.value?.url || '').hostname;
+    return new URL(store.url || activeTab.value?.url || "").hostname;
   } catch {
-    return '';
+    return "";
   }
 });
 
 const isAuditable = computed(() => {
-  const url = activeTab.value?.url ?? '';
-  return url.startsWith('http://') || url.startsWith('https://');
+  const url = activeTab.value?.url ?? "";
+  return url.startsWith("http://") || url.startsWith("https://");
 });
 
 async function runAudit() {
@@ -116,7 +116,7 @@ watch(
         <Panel variant="muted">
           <div class="loading">
             <span class="spinner" />
-            <span>Auditing {{ hostname || 'page' }}…</span>
+            <span>Auditing {{ hostname || "page" }}…</span>
           </div>
         </Panel>
       </div>
@@ -147,7 +147,10 @@ watch(
             />
           </Panel>
 
-          <Panel title="Critical & warnings" subtitle="Highest-impact issues on this page">
+          <Panel
+            title="Critical & warnings"
+            subtitle="Highest-impact issues on this page"
+          >
             <CriticalList :issues="store.issues" :max="4" />
           </Panel>
 
@@ -184,13 +187,19 @@ watch(
         </section>
 
         <section v-show="current === 'tech'" class="view">
-          <Panel title="Technologies" subtitle="Detected from DOM, headers & scripts">
+          <Panel
+            title="Technologies"
+            subtitle="Detected from DOM, headers & scripts"
+          >
             <TechStack :technologies="store.snapshot?.technologies ?? []" />
           </Panel>
         </section>
 
         <section v-show="current === 'headers'" class="view">
-          <Panel title="Response headers" subtitle="Captured from chrome.webRequest">
+          <Panel
+            title="Response headers"
+            subtitle="Captured from chrome.webRequest"
+          >
             <HeadersTable :headers="store.snapshot?.page.headers ?? {}" />
           </Panel>
         </section>
@@ -360,7 +369,9 @@ watch(
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .err-msg {

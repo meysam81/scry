@@ -6,26 +6,16 @@
       "parent": "Offer",
       "properties": {
         "highPrice": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "lowPrice": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "offerCount": {
-          "expected_types": [
-            "Number"
-          ]
+          "expected_types": ["Number"]
         },
         "priceCurrency": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
       "required_fields": []
@@ -36,27 +26,16 @@
       "parent": "Rating",
       "properties": {
         "bestRating": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "ratingValue": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "reviewCount": {
-          "expected_types": [
-            "Number"
-          ]
+          "expected_types": ["Number"]
         },
         "worstRating": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         }
       },
       "required_fields": []
@@ -67,219 +46,123 @@
       "parent": "CreativeWork",
       "properties": {
         "text": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
       "required_fields": []
     },
     "Article": {
       "google_eligible": true,
-      "google_recommended": [
-        "dateModified",
-        "mainEntityOfPage"
-      ],
-      "google_required": [
-        "headline",
-        "author",
-        "datePublished",
-        "image"
-      ],
+      "google_recommended": ["dateModified", "mainEntityOfPage"],
+      "google_required": ["headline", "author", "datePublished", "image"],
       "name": "Article",
       "parent": "CreativeWork",
       "properties": {
         "author": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "dateModified": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "datePublished": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "headline": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "mainEntityOfPage": {
-          "expected_types": [
-            "WebPage",
-            "URL"
-          ],
+          "expected_types": ["WebPage", "URL"],
           "is_url": true
         },
         "publisher": {
-          "expected_types": [
-            "Organization"
-          ]
+          "expected_types": ["Organization"]
         }
       },
-      "required_fields": [
-        "headline",
-        "datePublished",
-        "author"
-      ]
+      "required_fields": ["headline", "datePublished", "author"]
     },
     "BlogPosting": {
       "google_eligible": true,
-      "google_recommended": [
-        "dateModified",
-        "mainEntityOfPage"
-      ],
-      "google_required": [
-        "headline",
-        "author",
-        "datePublished",
-        "image"
-      ],
+      "google_recommended": ["dateModified", "mainEntityOfPage"],
+      "google_required": ["headline", "author", "datePublished", "image"],
       "name": "BlogPosting",
       "parent": "Article",
       "properties": {},
-      "required_fields": [
-        "headline",
-        "datePublished",
-        "author"
-      ]
+      "required_fields": ["headline", "datePublished", "author"]
     },
     "Book": {
       "google_eligible": true,
-      "google_recommended": [
-        "image",
-        "aggregateRating",
-        "isbn"
-      ],
-      "google_required": [
-        "name",
-        "author"
-      ],
+      "google_recommended": ["image", "aggregateRating", "isbn"],
+      "google_required": ["name", "author"],
       "name": "Book",
       "parent": "CreativeWork",
       "properties": {
         "aggregateRating": {
-          "expected_types": [
-            "AggregateRating"
-          ]
+          "expected_types": ["AggregateRating"]
         },
         "author": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "bookFormat": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "isbn": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "publisher": {
-          "expected_types": [
-            "Organization"
-          ]
+          "expected_types": ["Organization"]
         }
       },
-      "required_fields": [
-        "name",
-        "author"
-      ]
+      "required_fields": ["name", "author"]
     },
     "BreadcrumbList": {
       "google_eligible": true,
-      "google_required": [
-        "itemListElement"
-      ],
+      "google_required": ["itemListElement"],
       "name": "BreadcrumbList",
       "parent": "ItemList",
       "properties": {
         "itemListElement": {
-          "expected_types": [
-            "ListItem"
-          ]
+          "expected_types": ["ListItem"]
         }
       },
-      "required_fields": [
-        "itemListElement"
-      ]
+      "required_fields": ["itemListElement"]
     },
     "Course": {
       "google_eligible": true,
-      "google_recommended": [
-        "aggregateRating",
-        "offers"
-      ],
-      "google_required": [
-        "name",
-        "description",
-        "provider"
-      ],
+      "google_recommended": ["aggregateRating", "offers"],
+      "google_required": ["name", "description", "provider"],
       "name": "Course",
       "parent": "CreativeWork",
       "properties": {
         "aggregateRating": {
-          "expected_types": [
-            "AggregateRating"
-          ]
+          "expected_types": ["AggregateRating"]
         },
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "offers": {
-          "expected_types": [
-            "Offer",
-            "AggregateOffer"
-          ]
+          "expected_types": ["Offer", "AggregateOffer"]
         },
         "provider": {
-          "expected_types": [
-            "Organization"
-          ]
+          "expected_types": ["Organization"]
         }
       },
-      "required_fields": [
-        "name",
-        "description"
-      ]
+      "required_fields": ["name", "description"]
     },
     "CreativeWork": {
       "google_eligible": false,
@@ -287,39 +170,25 @@
       "parent": "Thing",
       "properties": {
         "author": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "dateModified": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "datePublished": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -332,74 +201,43 @@
         "temporalCoverage",
         "spatialCoverage"
       ],
-      "google_required": [
-        "name",
-        "description"
-      ],
+      "google_required": ["name", "description"],
       "name": "Dataset",
       "parent": "CreativeWork",
       "properties": {
         "creator": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "distribution": {
-          "expected_types": [
-            "DataDownload"
-          ]
+          "expected_types": ["DataDownload"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "spatialCoverage": {
-          "expected_types": [
-            "Place"
-          ]
+          "expected_types": ["Place"]
         },
         "temporalCoverage": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name",
-        "description"
-      ]
+      "required_fields": ["name", "description"]
     },
     "Event": {
       "google_eligible": true,
-      "google_recommended": [
-        "endDate",
-        "description",
-        "image"
-      ],
-      "google_required": [
-        "name",
-        "startDate",
-        "location"
-      ],
+      "google_recommended": ["endDate", "description", "image"],
+      "google_required": ["name", "startDate", "location"],
       "name": "Event",
       "parent": "Thing",
       "properties": {
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "endDate": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "eventStatus": {
@@ -410,129 +248,74 @@
             "EventPostponed",
             "EventRescheduled"
           ],
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "location": {
-          "expected_types": [
-            "Place",
-            "VirtualLocation"
-          ]
+          "expected_types": ["Place", "VirtualLocation"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "offers": {
-          "expected_types": [
-            "Offer",
-            "AggregateOffer"
-          ]
+          "expected_types": ["Offer", "AggregateOffer"]
         },
         "organizer": {
-          "expected_types": [
-            "Organization",
-            "Person"
-          ]
+          "expected_types": ["Organization", "Person"]
         },
         "performer": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "startDate": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         }
       },
-      "required_fields": [
-        "name",
-        "startDate",
-        "location"
-      ]
+      "required_fields": ["name", "startDate", "location"]
     },
     "FAQPage": {
       "google_eligible": true,
-      "google_required": [
-        "mainEntity"
-      ],
+      "google_required": ["mainEntity"],
       "name": "FAQPage",
       "parent": "WebPage",
       "properties": {
         "mainEntity": {
-          "expected_types": [
-            "Question"
-          ]
+          "expected_types": ["Question"]
         }
       },
-      "required_fields": [
-        "mainEntity"
-      ]
+      "required_fields": ["mainEntity"]
     },
     "HowTo": {
       "google_eligible": true,
-      "google_recommended": [
-        "image",
-        "totalTime"
-      ],
-      "google_required": [
-        "name",
-        "step"
-      ],
+      "google_recommended": ["image", "totalTime"],
+      "google_required": ["name", "step"],
       "name": "HowTo",
       "parent": "CreativeWork",
       "properties": {
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "step": {
-          "expected_types": [
-            "HowToStep"
-          ]
+          "expected_types": ["HowToStep"]
         },
         "supply": {
-          "expected_types": [
-            "Text",
-            "HowToSupply"
-          ]
+          "expected_types": ["Text", "HowToSupply"]
         },
         "tool": {
-          "expected_types": [
-            "Text",
-            "HowToTool"
-          ]
+          "expected_types": ["Text", "HowToTool"]
         },
         "totalTime": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name",
-        "step"
-      ]
+      "required_fields": ["name", "step"]
     },
     "ImageObject": {
       "google_eligible": false,
@@ -540,39 +323,25 @@
       "parent": "MediaObject",
       "properties": {
         "contentUrl": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "height": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "width": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         }
       },
       "required_fields": []
     },
     "JobPosting": {
       "google_eligible": true,
-      "google_recommended": [
-        "validThrough",
-        "employmentType",
-        "jobLocation"
-      ],
+      "google_recommended": ["validThrough", "employmentType", "jobLocation"],
       "google_required": [
         "title",
         "description",
@@ -583,45 +352,29 @@
       "parent": "Intangible",
       "properties": {
         "baseSalary": {
-          "expected_types": [
-            "MonetaryAmount"
-          ]
+          "expected_types": ["MonetaryAmount"]
         },
         "datePosted": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "employmentType": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "hiringOrganization": {
-          "expected_types": [
-            "Organization"
-          ]
+          "expected_types": ["Organization"]
         },
         "jobLocation": {
-          "expected_types": [
-            "Place"
-          ]
+          "expected_types": ["Place"]
         },
         "title": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "validThrough": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         }
       },
@@ -638,26 +391,16 @@
       "parent": "Intangible",
       "properties": {
         "item": {
-          "expected_types": [
-            "Thing",
-            "URL"
-          ]
+          "expected_types": ["Thing", "URL"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "position": {
-          "expected_types": [
-            "Number",
-            "Text"
-          ]
+          "expected_types": ["Number", "Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -665,203 +408,114 @@
     },
     "LocalBusiness": {
       "google_eligible": true,
-      "google_recommended": [
-        "image",
-        "priceRange",
-        "openingHours"
-      ],
-      "google_required": [
-        "name",
-        "address"
-      ],
+      "google_recommended": ["image", "priceRange", "openingHours"],
+      "google_required": ["name", "address"],
       "name": "LocalBusiness",
       "parent": "Organization",
       "properties": {
         "address": {
-          "expected_types": [
-            "PostalAddress"
-          ]
+          "expected_types": ["PostalAddress"]
         },
         "geo": {
-          "expected_types": [
-            "GeoCoordinates"
-          ]
+          "expected_types": ["GeoCoordinates"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "openingHours": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "priceRange": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "telephone": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
-      "required_fields": [
-        "name",
-        "address",
-        "telephone"
-      ]
+      "required_fields": ["name", "address", "telephone"]
     },
     "MobileApplication": {
       "google_eligible": true,
-      "google_recommended": [
-        "aggregateRating",
-        "applicationCategory"
-      ],
-      "google_required": [
-        "name",
-        "offers"
-      ],
+      "google_recommended": ["aggregateRating", "applicationCategory"],
+      "google_required": ["name", "offers"],
       "name": "MobileApplication",
       "parent": "SoftwareApplication",
       "properties": {},
-      "required_fields": [
-        "name"
-      ]
+      "required_fields": ["name"]
     },
     "Movie": {
       "google_eligible": true,
-      "google_recommended": [
-        "image",
-        "dateCreated",
-        "director"
-      ],
-      "google_required": [
-        "name"
-      ],
+      "google_recommended": ["image", "dateCreated", "director"],
+      "google_required": ["name"],
       "name": "Movie",
       "parent": "CreativeWork",
       "properties": {
         "actor": {
-          "expected_types": [
-            "Person"
-          ]
+          "expected_types": ["Person"]
         },
         "aggregateRating": {
-          "expected_types": [
-            "AggregateRating"
-          ]
+          "expected_types": ["AggregateRating"]
         },
         "dateCreated": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "director": {
-          "expected_types": [
-            "Person"
-          ]
+          "expected_types": ["Person"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name"
-      ]
+      "required_fields": ["name"]
     },
     "MusicAlbum": {
       "google_eligible": true,
-      "google_recommended": [
-        "byArtist",
-        "datePublished",
-        "image"
-      ],
-      "google_required": [
-        "name"
-      ],
+      "google_recommended": ["byArtist", "datePublished", "image"],
+      "google_required": ["name"],
       "name": "MusicAlbum",
       "parent": "MusicPlaylist",
       "properties": {
         "byArtist": {
-          "expected_types": [
-            "Person",
-            "MusicGroup"
-          ]
+          "expected_types": ["Person", "MusicGroup"]
         },
         "datePublished": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "track": {
-          "expected_types": [
-            "MusicRecording"
-          ]
+          "expected_types": ["MusicRecording"]
         }
       },
-      "required_fields": [
-        "name"
-      ]
+      "required_fields": ["name"]
     },
     "NewsArticle": {
       "google_eligible": true,
-      "google_recommended": [
-        "dateModified",
-        "mainEntityOfPage"
-      ],
-      "google_required": [
-        "headline",
-        "author",
-        "datePublished",
-        "image"
-      ],
+      "google_recommended": ["dateModified", "mainEntityOfPage"],
+      "google_required": ["headline", "author", "datePublished", "image"],
       "name": "NewsArticle",
       "parent": "Article",
       "properties": {},
-      "required_fields": [
-        "headline",
-        "datePublished",
-        "author"
-      ]
+      "required_fields": ["headline", "datePublished", "author"]
     },
     "Offer": {
       "google_eligible": false,
@@ -880,31 +534,20 @@
             "LimitedAvailability",
             "OnlineOnly"
           ],
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "price": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "priceCurrency": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "validFrom": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         }
       },
@@ -916,42 +559,27 @@
       "parent": "Thing",
       "properties": {
         "address": {
-          "expected_types": [
-            "PostalAddress"
-          ]
+          "expected_types": ["PostalAddress"]
         },
         "email": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "logo": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "sameAs": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "telephone": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -963,37 +591,24 @@
       "parent": "Thing",
       "properties": {
         "email": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "jobTitle": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "sameAs": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -1005,19 +620,13 @@
       "parent": "Thing",
       "properties": {
         "address": {
-          "expected_types": [
-            "PostalAddress"
-          ]
+          "expected_types": ["PostalAddress"]
         },
         "geo": {
-          "expected_types": [
-            "GeoCoordinates"
-          ]
+          "expected_types": ["GeoCoordinates"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
       "required_fields": []
@@ -1028,101 +637,60 @@
       "parent": "ContactPoint",
       "properties": {
         "addressCountry": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "addressLocality": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "addressRegion": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "postalCode": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "streetAddress": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
       "required_fields": []
     },
     "Product": {
       "google_eligible": true,
-      "google_recommended": [
-        "image",
-        "offers",
-        "review",
-        "aggregateRating"
-      ],
-      "google_required": [
-        "name"
-      ],
+      "google_recommended": ["image", "offers", "review", "aggregateRating"],
+      "google_required": ["name"],
       "name": "Product",
       "parent": "Thing",
       "properties": {
         "aggregateRating": {
-          "expected_types": [
-            "AggregateRating"
-          ]
+          "expected_types": ["AggregateRating"]
         },
         "brand": {
-          "expected_types": [
-            "Brand",
-            "Organization"
-          ]
+          "expected_types": ["Brand", "Organization"]
         },
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "gtin": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "offers": {
-          "expected_types": [
-            "Offer",
-            "AggregateOffer"
-          ]
+          "expected_types": ["Offer", "AggregateOffer"]
         },
         "review": {
-          "expected_types": [
-            "Review"
-          ]
+          "expected_types": ["Review"]
         },
         "sku": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name",
-        "description"
-      ]
+      "required_fields": ["name", "description"]
     },
     "Question": {
       "google_eligible": false,
@@ -1130,19 +698,13 @@
       "parent": "CreativeWork",
       "properties": {
         "acceptedAnswer": {
-          "expected_types": [
-            "Answer"
-          ]
+          "expected_types": ["Answer"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "text": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
       "required_fields": []
@@ -1153,22 +715,13 @@
       "parent": "Intangible",
       "properties": {
         "bestRating": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "ratingValue": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         },
         "worstRating": {
-          "expected_types": [
-            "Text",
-            "Number"
-          ]
+          "expected_types": ["Text", "Number"]
         }
       },
       "required_fields": []
@@ -1191,120 +744,70 @@
       "parent": "HowTo",
       "properties": {
         "aggregateRating": {
-          "expected_types": [
-            "AggregateRating"
-          ]
+          "expected_types": ["AggregateRating"]
         },
         "author": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "cookTime": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "prepTime": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "recipeCategory": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "recipeCuisine": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "recipeIngredient": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "recipeInstructions": {
-          "expected_types": [
-            "Text",
-            "HowToStep"
-          ]
+          "expected_types": ["Text", "HowToStep"]
         },
         "recipeYield": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "totalTime": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name",
-        "image",
-        "recipeIngredient"
-      ]
+      "required_fields": ["name", "image", "recipeIngredient"]
     },
     "Review": {
       "google_eligible": true,
-      "google_recommended": [
-        "datePublished"
-      ],
-      "google_required": [
-        "itemReviewed",
-        "author",
-        "reviewRating"
-      ],
+      "google_recommended": ["datePublished"],
+      "google_required": ["itemReviewed", "author", "reviewRating"],
       "name": "Review",
       "parent": "CreativeWork",
       "properties": {
         "author": {
-          "expected_types": [
-            "Person",
-            "Organization"
-          ]
+          "expected_types": ["Person", "Organization"]
         },
         "datePublished": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "itemReviewed": {
-          "expected_types": [
-            "Thing"
-          ]
+          "expected_types": ["Thing"]
         },
         "reviewBody": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "reviewRating": {
-          "expected_types": [
-            "Rating"
-          ]
+          "expected_types": ["Rating"]
         }
       },
-      "required_fields": [
-        "itemReviewed"
-      ]
+      "required_fields": ["itemReviewed"]
     },
     "SearchAction": {
       "google_eligible": false,
@@ -1312,63 +815,38 @@
       "parent": "Action",
       "properties": {
         "query-input": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "target": {
-          "expected_types": [
-            "Text",
-            "URL"
-          ]
+          "expected_types": ["Text", "URL"]
         }
       },
       "required_fields": []
     },
     "SoftwareApplication": {
       "google_eligible": true,
-      "google_recommended": [
-        "aggregateRating",
-        "applicationCategory"
-      ],
-      "google_required": [
-        "name",
-        "offers"
-      ],
+      "google_recommended": ["aggregateRating", "applicationCategory"],
+      "google_required": ["name", "offers"],
       "name": "SoftwareApplication",
       "parent": "CreativeWork",
       "properties": {
         "aggregateRating": {
-          "expected_types": [
-            "AggregateRating"
-          ]
+          "expected_types": ["AggregateRating"]
         },
         "applicationCategory": {
-          "expected_types": [
-            "Text",
-            "URL"
-          ]
+          "expected_types": ["Text", "URL"]
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "offers": {
-          "expected_types": [
-            "Offer",
-            "AggregateOffer"
-          ]
+          "expected_types": ["Offer", "AggregateOffer"]
         },
         "operatingSystem": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name"
-      ]
+      "required_fields": ["name"]
     },
     "Thing": {
       "google_eligible": false,
@@ -1376,26 +854,17 @@
       "parent": "",
       "properties": {
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "image": {
-          "expected_types": [
-            "ImageObject",
-            "URL"
-          ],
+          "expected_types": ["ImageObject", "URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -1403,66 +872,38 @@
     },
     "VideoObject": {
       "google_eligible": true,
-      "google_recommended": [
-        "duration",
-        "contentUrl",
-        "embedUrl"
-      ],
-      "google_required": [
-        "name",
-        "description",
-        "thumbnailUrl",
-        "uploadDate"
-      ],
+      "google_recommended": ["duration", "contentUrl", "embedUrl"],
+      "google_required": ["name", "description", "thumbnailUrl", "uploadDate"],
       "name": "VideoObject",
       "parent": "MediaObject",
       "properties": {
         "contentUrl": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "description": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "duration": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "embedUrl": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "thumbnailUrl": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         },
         "uploadDate": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         }
       },
-      "required_fields": [
-        "name",
-        "description",
-        "thumbnailUrl",
-        "uploadDate"
-      ]
+      "required_fields": ["name", "description", "thumbnailUrl", "uploadDate"]
     },
     "VirtualLocation": {
       "google_eligible": false,
@@ -1470,9 +911,7 @@
       "parent": "Intangible",
       "properties": {
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -1480,26 +919,16 @@
     },
     "WebApplication": {
       "google_eligible": true,
-      "google_recommended": [
-        "aggregateRating",
-        "applicationCategory"
-      ],
-      "google_required": [
-        "name",
-        "offers"
-      ],
+      "google_recommended": ["aggregateRating", "applicationCategory"],
+      "google_required": ["name", "offers"],
       "name": "WebApplication",
       "parent": "SoftwareApplication",
       "properties": {
         "browserRequirements": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         }
       },
-      "required_fields": [
-        "name"
-      ]
+      "required_fields": ["name"]
     },
     "WebPage": {
       "google_eligible": false,
@@ -1507,32 +936,22 @@
       "parent": "CreativeWork",
       "properties": {
         "dateCreated": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "dateModified": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "datePublished": {
-          "expected_types": [
-            "Text"
-          ],
+          "expected_types": ["Text"],
           "is_date": true
         },
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },
@@ -1544,19 +963,13 @@
       "parent": "CreativeWork",
       "properties": {
         "name": {
-          "expected_types": [
-            "Text"
-          ]
+          "expected_types": ["Text"]
         },
         "potentialAction": {
-          "expected_types": [
-            "SearchAction"
-          ]
+          "expected_types": ["SearchAction"]
         },
         "url": {
-          "expected_types": [
-            "URL"
-          ],
+          "expected_types": ["URL"],
           "is_url": true
         }
       },

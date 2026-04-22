@@ -1,7 +1,7 @@
 // Watches chrome.tabs to keep a reactive `activeTab` ref in sync with the
 // tab currently focused in the user's foreground window. Used by every UI
 // surface so they react to tab switches without re-plumbing.
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 export interface ActiveTab {
   id: number;
@@ -13,15 +13,18 @@ export function useActiveTab() {
   const activeTab = ref<ActiveTab | null>(null);
 
   async function read() {
-    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      lastFocusedWindow: true,
+    });
     if (!tab?.id) {
       activeTab.value = null;
       return;
     }
     activeTab.value = {
       id: tab.id,
-      url: tab.url ?? '',
-      title: tab.title ?? '',
+      url: tab.url ?? "",
+      title: tab.title ?? "",
     };
   }
 
@@ -31,7 +34,11 @@ export function useActiveTab() {
     changeInfo: { url?: string; title?: string; status?: string },
   ) => {
     // Refresh when URL or title changes on the active tab.
-    if (changeInfo.url || changeInfo.title || changeInfo.status === 'complete') {
+    if (
+      changeInfo.url ||
+      changeInfo.title ||
+      changeInfo.status === "complete"
+    ) {
       void read();
     }
   };

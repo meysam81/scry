@@ -3,56 +3,56 @@
  * Renders the response headers captured by chrome.webRequest. Groups by
  * header family (security, cache, tracking, other) to make scanning easy.
  */
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps<{ headers: Record<string, string[]> }>();
 
 const SECURITY = new Set([
-  'content-security-policy',
-  'strict-transport-security',
-  'x-content-type-options',
-  'x-frame-options',
-  'referrer-policy',
-  'permissions-policy',
-  'cross-origin-embedder-policy',
-  'cross-origin-opener-policy',
-  'cross-origin-resource-policy',
+  "content-security-policy",
+  "strict-transport-security",
+  "x-content-type-options",
+  "x-frame-options",
+  "referrer-policy",
+  "permissions-policy",
+  "cross-origin-embedder-policy",
+  "cross-origin-opener-policy",
+  "cross-origin-resource-policy",
 ]);
 
 const CACHE = new Set([
-  'cache-control',
-  'expires',
-  'etag',
-  'last-modified',
-  'age',
-  'vary',
+  "cache-control",
+  "expires",
+  "etag",
+  "last-modified",
+  "age",
+  "vary",
 ]);
 
-type Group = 'security' | 'cache' | 'content' | 'other';
+type Group = "security" | "cache" | "content" | "other";
 
 const CONTENT = new Set([
-  'content-type',
-  'content-encoding',
-  'content-language',
-  'content-length',
-  'content-disposition',
+  "content-type",
+  "content-encoding",
+  "content-language",
+  "content-length",
+  "content-disposition",
 ]);
 
 function groupOf(name: string): Group {
   const n = name.toLowerCase();
-  if (SECURITY.has(n)) return 'security';
-  if (CACHE.has(n)) return 'cache';
-  if (CONTENT.has(n)) return 'content';
-  return 'other';
+  if (SECURITY.has(n)) return "security";
+  if (CACHE.has(n)) return "cache";
+  if (CONTENT.has(n)) return "content";
+  return "other";
 }
 
-const GROUP_ORDER: Group[] = ['security', 'content', 'cache', 'other'];
+const GROUP_ORDER: Group[] = ["security", "content", "cache", "other"];
 
 const GROUP_META: Record<Group, { label: string; hint: string }> = {
-  security: { label: 'Security', hint: 'Headers that protect users' },
-  content:  { label: 'Content',  hint: 'Type, encoding, language' },
-  cache:    { label: 'Cache',    hint: 'Caching directives' },
-  other:    { label: 'Other',    hint: 'Everything else' },
+  security: { label: "Security", hint: "Headers that protect users" },
+  content: { label: "Content", hint: "Type, encoding, language" },
+  cache: { label: "Cache", hint: "Caching directives" },
+  other: { label: "Other", hint: "Everything else" },
 };
 
 const grouped = computed(() => {
@@ -94,8 +94,8 @@ const grouped = computed(() => {
       </table>
     </section>
     <p v-if="!Object.keys(headers).length" class="empty">
-      No response headers captured. Reload the page with the extension
-      installed so chrome.webRequest can see the real response.
+      No response headers captured. Reload the page with the extension installed
+      so chrome.webRequest can see the real response.
     </p>
   </div>
 </template>

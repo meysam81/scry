@@ -3,7 +3,7 @@
  * One chip to render every severity tag across the app. Binds to
  * --color-{critical,warning,info} tokens, no inline colors ever.
  */
-import type { Severity } from '@/schemas/audit';
+import type { Severity } from "@/schemas/audit";
 
 defineProps<{
   severity: Severity;
@@ -11,14 +11,18 @@ defineProps<{
 }>();
 
 const LABEL: Record<Severity, string> = {
-  critical: 'Critical',
-  warning: 'Warning',
-  info: 'Info',
+  critical: "Critical",
+  warning: "Warning",
+  info: "Info",
 };
 </script>
 
 <template>
-  <span class="chip" :data-severity="severity" :data-compact="compact || undefined">
+  <span
+    class="chip"
+    :data-severity="severity"
+    :data-compact="compact || undefined"
+  >
     <span class="dot" />
     {{ compact ? LABEL[severity][0] : LABEL[severity] }}
   </span>
@@ -42,19 +46,19 @@ const LABEL: Record<Severity, string> = {
   white-space: nowrap;
 }
 
-.chip[data-severity='critical'] {
+.chip[data-severity="critical"] {
   --_bg: var(--color-critical-soft);
   --_fg: var(--color-critical);
   --_border: color-mix(in oklab, var(--color-critical) 30%, transparent);
 }
 
-.chip[data-severity='warning'] {
+.chip[data-severity="warning"] {
   --_bg: var(--color-warning-soft);
   --_fg: var(--color-warning);
   --_border: color-mix(in oklab, var(--color-warning) 30%, transparent);
 }
 
-.chip[data-severity='info'] {
+.chip[data-severity="info"] {
   --_bg: var(--color-info-soft);
   --_fg: var(--color-info);
   --_border: color-mix(in oklab, var(--color-info) 30%, transparent);
