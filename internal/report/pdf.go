@@ -10,8 +10,8 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
+	"github.com/meysam81/scry/core/model"
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/internal/model"
 )
 
 // PDFReporter renders a CrawlResult as a PDF document by first generating

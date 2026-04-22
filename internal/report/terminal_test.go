@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func sampleResult() *model.CrawlResult {

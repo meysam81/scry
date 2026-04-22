@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func TestCrawlBudgetAnalyzer_Name(t *testing.T) {

@@ -3,7 +3,7 @@ package analysis
 import (
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // PageClass represents the classification of a page.

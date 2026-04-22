@@ -7,7 +7,7 @@ import (
 	"html/template"
 	"io"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 //go:embed templates/report.html.tmpl

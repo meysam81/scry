@@ -11,11 +11,11 @@ import (
 
 	"github.com/urfave/cli/v3"
 
+	"github.com/meysam81/scry/core/model"
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	lh "github.com/meysam81/scry/internal/lighthouse"
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/internal/model"
 )
 
 var (

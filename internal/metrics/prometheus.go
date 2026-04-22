@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 	"github.com/meysam81/scry/internal/report"
 )
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // JSONLReporter writes the CrawlResult as JSON Lines — one JSON object per line.

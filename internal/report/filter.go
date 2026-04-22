@@ -3,7 +3,7 @@ package report
 import (
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // FilterIssues returns only issues matching the given criteria.

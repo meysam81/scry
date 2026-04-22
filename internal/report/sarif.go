@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // SARIFReporter writes the CrawlResult issues in SARIF 2.1.0 format.

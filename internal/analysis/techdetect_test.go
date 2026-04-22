@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func TestDetectTechnologies_Empty(t *testing.T) {

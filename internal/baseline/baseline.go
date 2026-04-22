@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // version is the schema version written into every baseline file.

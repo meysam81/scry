@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // CrawlBudgetAnalyzer detects crawl budget waste across a site.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func TestDetermineExitCode(t *testing.T) {

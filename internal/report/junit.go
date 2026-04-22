@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // JUnitReporter writes the CrawlResult issues as JUnit XML.

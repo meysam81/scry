@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func TestAnalyzeRedirects_Empty(t *testing.T) {

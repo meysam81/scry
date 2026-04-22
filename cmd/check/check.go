@@ -9,13 +9,13 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/meysam81/scry/internal/audit"
+	"github.com/meysam81/scry/core/checks"
+	"github.com/meysam81/scry/core/model"
+	"github.com/meysam81/scry/core/rules"
 	"github.com/meysam81/scry/internal/cmdutil"
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/crawler"
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/internal/model"
-	"github.com/meysam81/scry/internal/rules"
 )
 
 var (
@@ -198,7 +198,7 @@ func runSingleCheck(ctx context.Context, cfg *config.Config, fetcher crawler.Fet
 
 	// Run audit checks.
 	l.Info().Msg("running audit checks")
-	registry := audit.DefaultRegistry(l, cfg.SchemaPath)
+	registry := checks.DefaultRegistry(l, cfg.SchemaPath)
 
 	// Load and register custom CEL rules if configured.
 	if cfg.RulesFile != "" {

@@ -3,7 +3,7 @@ package report
 import (
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func sampleIssues() []model.Issue {

@@ -6,7 +6,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // Reporter formats and writes a CrawlResult to an output destination.

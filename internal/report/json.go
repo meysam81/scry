@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // jsonOutput wraps CrawlResult with summary statistics for the JSON reporter.

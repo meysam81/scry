@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // SummaryStats holds aggregated statistics about audit results.

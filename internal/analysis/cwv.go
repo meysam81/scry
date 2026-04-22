@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 const (

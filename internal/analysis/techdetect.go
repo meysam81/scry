@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // Technology represents a detected technology on a website.
