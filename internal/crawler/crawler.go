@@ -13,7 +13,7 @@ import (
 
 	"github.com/meysam81/scry/internal/config"
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // Crawler orchestrates concurrent web crawling.

@@ -3,7 +3,7 @@ package analysis
 import (
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func TestClassifyPages_Homepage(t *testing.T) {

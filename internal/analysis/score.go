@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // ScoreResult holds the computed health score for a crawled site.

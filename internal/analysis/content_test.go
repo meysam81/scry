@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 	"golang.org/x/net/html"
 )
 

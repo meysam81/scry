@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template" // nosemgrep: import-text-template -- generates markdown files, not HTML; html/template would break output
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 const markdownTimeFmt = "2006-01-02 15:04:05"

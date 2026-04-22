@@ -1,0 +1,12 @@
+# Built artefacts — always derived, never committed.
+dist/
+node_modules/
+
+# WASM build output — reproduced from core/ sources via scripts/build-wasm.ts
+public/scry.wasm
+public/wasm_exec.js
+
+# Editor / OS noise
+.DS_Store
+*.log
+.vite/

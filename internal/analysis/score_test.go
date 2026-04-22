@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func makeCrawlResult(issues []model.Issue, pageCount int) *model.CrawlResult {

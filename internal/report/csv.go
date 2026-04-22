@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // sanitizeCSVCell prevents CSV formula injection by prefixing cells that start

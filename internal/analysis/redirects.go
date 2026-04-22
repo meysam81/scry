@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 // RedirectEntry represents a single redirect, including its full chain,

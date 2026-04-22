@@ -1,0 +1,180 @@
+/*
+ * Design tokens. Adapted from Sanity's UI system (airy whitespace, editorial
+ * numerals, signature coral accent, flat low-radius panels) and re-tuned for
+ * a dark-first side-panel surface. Nothing in the app hard-codes colours,
+ * spacing, radii, or fonts — they all resolve through these custom properties.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* === PALETTE: raw colours, never referenced directly outside this file === */
+  --palette-ink-950: #08090c;
+  --palette-ink-900: #0f1014;
+  --palette-ink-850: #14151a;
+  --palette-ink-800: #1a1b21;
+  --palette-ink-700: #22232a;
+  --palette-ink-600: #2c2d35;
+  --palette-ink-500: #3a3b45;
+  --palette-ink-400: #5b5d68;
+  --palette-ink-300: #8a8c95;
+  --palette-ink-200: #b4b6bd;
+  --palette-ink-100: #e2e3e8;
+  --palette-ink-50:  #f5f5f7;
+
+  --palette-coral-600: #d93628;
+  --palette-coral-500: #f03e2f;  /* Sanity signature red */
+  --palette-coral-400: #ff5a4c;
+  --palette-coral-300: #ff8073;
+  --palette-coral-100: #ffd6d1;
+
+  --palette-amber-500: #f2a365;
+  --palette-amber-400: #ffb66b;
+  --palette-amber-100: #ffe3c2;
+
+  --palette-lime-500:  #7ec97b;
+  --palette-lime-400:  #95d892;
+  --palette-lime-100:  #cfeecf;
+
+  --palette-cyan-500:  #59b8d3;
+  --palette-cyan-400:  #6ec5dc;
+  --palette-cyan-100:  #c8e8f0;
+
+  --palette-violet-500: #a579f2;
+  --palette-violet-400: #b68eff;
+  --palette-violet-100: #dfcfff;
+
+  /* === SEMANTIC: everything in components binds to these === */
+
+  /* Surfaces */
+  --color-bg-base:       var(--palette-ink-950);
+  --color-bg-surface:    var(--palette-ink-900);
+  --color-bg-surface-2:  var(--palette-ink-850);
+  --color-bg-surface-3:  var(--palette-ink-800);
+  --color-bg-hover:      var(--palette-ink-700);
+  --color-bg-active:     var(--palette-ink-600);
+
+  /* Borders & dividers */
+  --color-border-subtle: var(--palette-ink-700);
+  --color-border:        var(--palette-ink-600);
+  --color-border-strong: var(--palette-ink-500);
+
+  /* Text */
+  --color-text:           var(--palette-ink-50);
+  --color-text-muted:     var(--palette-ink-200);
+  --color-text-faint:     var(--palette-ink-300);
+  --color-text-disabled:  var(--palette-ink-400);
+  --color-text-on-accent: var(--palette-ink-950);
+
+  /* Brand */
+  --color-accent:         var(--palette-coral-500);
+  --color-accent-hover:   var(--palette-coral-400);
+  --color-accent-active:  var(--palette-coral-600);
+  --color-accent-soft:    color-mix(in oklab, var(--palette-coral-500) 18%, transparent);
+
+  /* Severity */
+  --color-critical:       var(--palette-coral-500);
+  --color-critical-soft:  color-mix(in oklab, var(--palette-coral-500) 15%, transparent);
+  --color-warning:        var(--palette-amber-500);
+  --color-warning-soft:   color-mix(in oklab, var(--palette-amber-500) 15%, transparent);
+  --color-info:           var(--palette-cyan-500);
+  --color-info-soft:      color-mix(in oklab, var(--palette-cyan-500) 15%, transparent);
+  --color-success:        var(--palette-lime-500);
+  --color-success-soft:   color-mix(in oklab, var(--palette-lime-500) 15%, transparent);
+
+  /* Category accents — each audit family gets a distinct hue, used sparingly */
+  --color-cat-seo:           var(--palette-coral-400);
+  --color-cat-performance:   var(--palette-amber-400);
+  --color-cat-security:      var(--palette-violet-400);
+  --color-cat-accessibility: var(--palette-cyan-400);
+  --color-cat-images:        var(--palette-lime-400);
+  --color-cat-structured:    var(--palette-violet-400);
+  --color-cat-health:        var(--palette-amber-400);
+  --color-cat-links:         var(--palette-cyan-400);
+  --color-cat-tls:           var(--palette-violet-500);
+  --color-cat-hreflang:      var(--palette-cyan-500);
+
+  /* === TYPOGRAPHY === */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Instrument Serif', 'PP Editorial New', 'Times New Roman', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, 'Menlo', monospace;
+
+  --font-size-xs:   11px;
+  --font-size-sm:   12px;
+  --font-size-base: 13px;
+  --font-size-md:   14px;
+  --font-size-lg:   16px;
+  --font-size-xl:   20px;
+  --font-size-2xl:  24px;
+  --font-size-3xl:  32px;
+  --font-size-display: 56px;
+  --font-size-display-lg: 80px;
+
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --line-height-tight:  1.15;
+  --line-height-snug:   1.3;
+  --line-height-normal: 1.5;
+  --line-height-loose:  1.7;
+
+  --letter-tight:  -0.02em;
+  --letter-normal: 0;
+  --letter-wide:   0.08em;
+
+  /* === SPACING — 4px base === */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  40px;
+  --space-9:  56px;
+  --space-10: 72px;
+
+  /* === RADII — deliberately small, Sanity-style === */
+  --radius-sm:   3px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   14px;
+  --radius-full: 9999px;
+
+  /* === ELEVATION — borders do most of the work, shadows are restrained === */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.42);
+  --shadow-focus: 0 0 0 3px var(--color-accent-soft);
+
+  /* === MOTION === */
+  --ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast:   120ms;
+  --duration-medium: 200ms;
+  --duration-slow:   360ms;
+
+  /* === LAYOUT === */
+  --layout-sidepanel-min: 320px;
+  --layout-header-height: 48px;
+  --layout-tab-height:    40px;
+
+  /* === Z-INDEX === */
+  --z-base:    1;
+  --z-sticky:  10;
+  --z-overlay: 100;
+  --z-modal:   1000;
+  --z-toast:   2000;
+}
+
+/* Respect user's OS preference for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast:   0ms;
+    --duration-medium: 0ms;
+    --duration-slow:   0ms;
+  }
+}

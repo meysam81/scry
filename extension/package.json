@@ -1,0 +1,30 @@
+{
+  "name": "scry-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension front-end for the scry audit engine (Go/WASM).",
+  "scripts": {
+    "dev": "vite",
+    "build": "bun run build:wasm && vite build",
+    "build:vite": "vite build",
+    "build:wasm": "bun run scripts/build-wasm.ts",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "pinia": "^3.0.0",
+    "vue": "^3.5.22",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.4.0",
+    "@types/chrome": "^0.1.0",
+    "@types/node": "^24.1.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "bun-types": "^1.3.13",
+    "typescript": "~5.9.0",
+    "vite": "^8.0.0",
+    "vue-tsc": "^3.1.0"
+  }
+}

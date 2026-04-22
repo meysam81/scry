@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/internal/model"
+	"github.com/meysam81/scry/core/model"
 )
 
 func TestPSIClientRun_Success(t *testing.T) {

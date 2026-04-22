@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/meysam81/scry/internal/logger"
-	"github.com/meysam81/scry/internal/schema"
+	"github.com/meysam81/scry/core/schema"
 )
 
 var flagURL string
