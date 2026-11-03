@@ -18,34 +18,48 @@ type ScoreResult struct {
 	TotalIssues int            `json:"total_issues"`
 }
 
+// Score categories. Each is also the check-name prefix of the checker that
+// reports into it.
+const (
+	categorySEO            = "seo"
+	categoryHealth         = "health"
+	categoryPerformance    = "performance"
+	categorySecurity       = "security"
+	categoryAccessibility  = "accessibility"
+	categoryLinks          = "links"
+	categoryImages         = "images"
+	categoryStructuredData = "structured-data"
+	categoryContent        = "content"
+)
+
 // categoryNames enumerates the recognised score categories.
 var categoryNames = []string{
-	"seo",
-	"health",
-	"performance",
-	"security",
-	"accessibility",
-	"links",
-	"images",
-	"structured-data",
-	"content",
+	categorySEO,
+	categoryHealth,
+	categoryPerformance,
+	categorySecurity,
+	categoryAccessibility,
+	categoryLinks,
+	categoryImages,
+	categoryStructuredData,
+	categoryContent,
 }
 
 // checkPrefixToCategory maps a check name prefix to a score category.
 // Prefixes not listed here are ignored during category scoring.
 var checkPrefixToCategory = map[string]string{
-	"seo":             "seo",
-	"health":          "health",
-	"performance":     "performance",
-	"security":        "security",
-	"accessibility":   "accessibility",
-	"links":           "links",
-	"external-links":  "links",
-	"images":          "images",
-	"structured-data": "structured-data",
-	"content":         "content",
-	"hreflang":        "seo",
-	"tls":             "security",
+	categorySEO:            categorySEO,
+	categoryHealth:         categoryHealth,
+	categoryPerformance:    categoryPerformance,
+	categorySecurity:       categorySecurity,
+	categoryAccessibility:  categoryAccessibility,
+	categoryLinks:          categoryLinks,
+	"external-links":       categoryLinks,
+	categoryImages:         categoryImages,
+	categoryStructuredData: categoryStructuredData,
+	categoryContent:        categoryContent,
+	"hreflang":             categorySEO,
+	"tls":                  categorySecurity,
 }
 
 // deduction returns the point deduction for a given severity.

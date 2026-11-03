@@ -21,7 +21,7 @@ func CrossCheck(objects []map[string]any) []Finding {
 func checkDuplicateTypes(objects []map[string]any) []Finding {
 	typeCounts := make(map[string]int)
 	for _, obj := range objects {
-		types := extractTypesGeneric(obj["@type"])
+		types := extractTypesGeneric(obj[keyType])
 		for _, t := range types {
 			typeCounts[t]++
 		}
@@ -40,7 +40,7 @@ func checkDuplicateTypes(objects []map[string]any) []Finding {
 	for _, typeName := range dupes {
 		findings = append(findings, Finding{
 			Code:     "duplicate-type",
-			Severity: "info",
+			Severity: severityInfo,
 			Message:  fmt.Sprintf("multiple JSON-LD blocks declare @type %q (%d occurrences)", typeName, typeCounts[typeName]),
 		})
 	}
@@ -52,7 +52,7 @@ func checkBreadcrumbPositions(objects []map[string]any) []Finding {
 	var findings []Finding
 
 	for _, obj := range objects {
-		types := extractTypesGeneric(obj["@type"])
+		types := extractTypesGeneric(obj[keyType])
 		if !slices.Contains(types, "BreadcrumbList") {
 			continue
 		}
@@ -79,7 +79,7 @@ func checkBreadcrumbPositions(objects []map[string]any) []Finding {
 			if posNum != expected {
 				findings = append(findings, Finding{
 					Code:     "breadcrumb-positions",
-					Severity: "warning",
+					Severity: severityWarning,
 					Message:  fmt.Sprintf("BreadcrumbList item at index %d has position %.0f; expected %d", i, posNum, i+1),
 				})
 				break // One finding per breadcrumb is enough.
@@ -95,7 +95,7 @@ func checkSearchAction(objects []map[string]any) []Finding {
 	var findings []Finding
 
 	for _, obj := range objects {
-		types := extractTypesGeneric(obj["@type"])
+		types := extractTypesGeneric(obj[keyType])
 		if !slices.Contains(types, "WebSite") {
 			continue
 		}
@@ -110,7 +110,7 @@ func checkSearchAction(objects []map[string]any) []Finding {
 			continue
 		}
 
-		actionTypes := extractTypesGeneric(actionObj["@type"])
+		actionTypes := extractTypesGeneric(actionObj[keyType])
 		if !slices.Contains(actionTypes, "SearchAction") {
 			continue
 		}
@@ -139,7 +139,7 @@ func checkSearchAction(objects []map[string]any) []Finding {
 		if !strings.Contains(targetStr, "{search_term_string}") {
 			findings = append(findings, Finding{
 				Code:     "search-action-template",
-				Severity: "warning",
+				Severity: severityWarning,
 				Message:  "WebSite SearchAction target is missing {search_term_string} template variable",
 			})
 		}

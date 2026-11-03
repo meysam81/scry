@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const codeWrongContext = "wrong-context"
+
 // validContextPrefixes are the accepted schema.org context URL prefixes.
 var validContextPrefixes = []string{
 	"https://schema.org",
@@ -13,13 +15,13 @@ var validContextPrefixes = []string{
 
 // ValidateContext checks the @context field of a JSON-LD object.
 func ValidateContext(obj map[string]any) []Finding {
-	ctxVal, hasCtx := obj["@context"]
+	ctxVal, hasCtx := obj[keyContext]
 	if !hasCtx {
 		return []Finding{{
 			Code:     "missing-context",
-			Severity: "info",
+			Severity: severityInfo,
 			Message:  "JSON-LD block has no @context",
-			Path:     "@context",
+			Path:     keyContext,
 		}}
 	}
 
@@ -27,10 +29,10 @@ func ValidateContext(obj map[string]any) []Finding {
 	case string:
 		if !isSchemaOrgURL(ctx) {
 			return []Finding{{
-				Code:     "wrong-context",
-				Severity: "warning",
+				Code:     codeWrongContext,
+				Severity: severityWarning,
 				Message:  "@context does not point to schema.org: " + ctx,
-				Path:     "@context",
+				Path:     keyContext,
 			}}
 		}
 	case map[string]any:
@@ -39,8 +41,8 @@ func ValidateContext(obj map[string]any) []Finding {
 			if vocabStr, ok := vocab.(string); ok {
 				if !isSchemaOrgURL(vocabStr) {
 					return []Finding{{
-						Code:     "wrong-context",
-						Severity: "warning",
+						Code:     codeWrongContext,
+						Severity: severityWarning,
 						Message:  "@context @vocab does not point to schema.org: " + vocabStr,
 						Path:     "@context.@vocab",
 					}}
@@ -66,10 +68,10 @@ func ValidateContext(obj map[string]any) []Finding {
 		}
 		if !found {
 			return []Finding{{
-				Code:     "wrong-context",
-				Severity: "warning",
+				Code:     codeWrongContext,
+				Severity: severityWarning,
 				Message:  "@context array does not contain a schema.org reference",
-				Path:     "@context",
+				Path:     keyContext,
 			}}
 		}
 	}
