@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-const maxDepth = 3
+const (
+	maxDepth            = 3
+	codeInvalidURLField = "invalid-url-field"
+)
 
 // Validate validates a JSON-LD object (already parsed from JSON) against
 // the registry's type definitions. It handles @graph, arrays of @type,
@@ -34,13 +37,13 @@ func (r *Registry) validateObject(obj map[string]any, path string, depth int) []
 		}
 	}
 
-	typeVal, hasType := obj["@type"]
+	typeVal, hasType := obj[keyType]
 	if !hasType {
 		return []Finding{{
 			Code:     "missing-type",
-			Severity: "warning",
+			Severity: severityWarning,
 			Message:  "JSON-LD block has no @type field",
-			Path:     joinPath(path, "@type"),
+			Path:     joinPath(path, keyType),
 		}}
 	}
 
@@ -52,9 +55,9 @@ func (r *Registry) validateObject(obj map[string]any, path string, depth int) []
 		if !known {
 			findings = append(findings, Finding{
 				Code:     "unknown-type",
-				Severity: "info",
+				Severity: severityInfo,
 				Message:  fmt.Sprintf("JSON-LD @type %q is not a commonly recognised Schema.org type", typeName),
-				Path:     joinPath(path, "@type"),
+				Path:     joinPath(path, keyType),
 			})
 			continue
 		}
@@ -77,7 +80,7 @@ func (r *Registry) checkRequiredFields(obj map[string]any, td *TypeDef, typeName
 		if _, exists := obj[field]; !exists {
 			findings = append(findings, Finding{
 				Code:     "missing-required-field",
-				Severity: "warning",
+				Severity: severityWarning,
 				Message:  fmt.Sprintf("%s is missing required field %q", typeName, field),
 				Path:     joinPath(path, field),
 			})
@@ -114,7 +117,7 @@ func (r *Registry) checkProperties(obj map[string]any, td *TypeDef, path string,
 				if !ValidateEnum(str, propDef.EnumValues) {
 					findings = append(findings, Finding{
 						Code:     "invalid-enum-value",
-						Severity: "warning",
+						Severity: severityWarning,
 						Message:  fmt.Sprintf("JSON-LD field %q has value %q; expected one of: %s", propName, str, strings.Join(propDef.EnumValues, ", ")),
 						Path:     propPath,
 					})
@@ -137,7 +140,7 @@ func (r *Registry) checkDateValue(field string, val any, path string) []Finding 
 	if !ok {
 		return []Finding{{
 			Code:     "invalid-date-format",
-			Severity: "warning",
+			Severity: severityWarning,
 			Message:  fmt.Sprintf("JSON-LD field %q has a non-string value; expected ISO 8601 date", field),
 			Path:     path,
 		}}
@@ -145,7 +148,7 @@ func (r *Registry) checkDateValue(field string, val any, path string) []Finding 
 	if !ValidateDate(str) {
 		return []Finding{{
 			Code:     "invalid-date-format",
-			Severity: "warning",
+			Severity: severityWarning,
 			Message:  fmt.Sprintf("JSON-LD field %q has invalid date value %q; expected ISO 8601 format (YYYY-MM-DD)", field, str),
 			Path:     path,
 		}}
@@ -159,8 +162,8 @@ func (r *Registry) checkURLValue(field string, val any, path string) []Finding {
 	case string:
 		if !ValidateURL(v) {
 			return []Finding{{
-				Code:     "invalid-url-field",
-				Severity: "warning",
+				Code:     codeInvalidURLField,
+				Severity: severityWarning,
 				Message:  fmt.Sprintf("JSON-LD field %q has invalid URL value %q; expected http://, https://, or /", field, v),
 				Path:     path,
 			}}
@@ -171,8 +174,8 @@ func (r *Registry) checkURLValue(field string, val any, path string) []Finding {
 			if s, ok := item.(string); ok {
 				if !ValidateURL(s) {
 					findings = append(findings, Finding{
-						Code:     "invalid-url-field",
-						Severity: "warning",
+						Code:     codeInvalidURLField,
+						Severity: severityWarning,
 						Message:  fmt.Sprintf("JSON-LD field %q has invalid URL value %q; expected http://, https://, or /", field, s),
 						Path:     path,
 					})
@@ -184,8 +187,8 @@ func (r *Registry) checkURLValue(field string, val any, path string) []Finding {
 		// Nested object (e.g. ImageObject) — skip URL check, will be validated as nested type.
 	default:
 		return []Finding{{
-			Code:     "invalid-url-field",
-			Severity: "warning",
+			Code:     codeInvalidURLField,
+			Severity: severityWarning,
 			Message:  fmt.Sprintf("JSON-LD field %q has a non-string/non-array value; expected a URL", field),
 			Path:     path,
 		}}
@@ -201,7 +204,7 @@ func (r *Registry) checkNestedType(field string, val any, propDef PropertyDef, p
 		return nil
 	}
 
-	typeVal, hasType := obj["@type"]
+	typeVal, hasType := obj[keyType]
 	if !hasType {
 		// Nested object without @type — not flagged here (missing-type is for root objects).
 		return nil
@@ -220,7 +223,7 @@ func (r *Registry) checkNestedType(field string, val any, propDef PropertyDef, p
 	if !matched && len(types) > 0 {
 		findings = append(findings, Finding{
 			Code:     "invalid-nested-type",
-			Severity: "warning",
+			Severity: severityWarning,
 			Message:  fmt.Sprintf("JSON-LD field %q has nested @type %q; expected one of: %s", field, strings.Join(types, ", "), strings.Join(propDef.ExpectedTypes, ", ")),
 			Path:     path + ".@type",
 		})

@@ -8,7 +8,7 @@ import (
 // ValidateGoogle checks a JSON-LD object against Google Rich Results requirements.
 // It only produces findings for types known to the registry.
 func (r *Registry) ValidateGoogle(obj map[string]any) []Finding {
-	typeVal, hasType := obj["@type"]
+	typeVal, hasType := obj[keyType]
 	if !hasType {
 		return nil
 	}
@@ -25,9 +25,9 @@ func (r *Registry) ValidateGoogle(obj map[string]any) []Finding {
 		if !td.GoogleEligible {
 			findings = append(findings, Finding{
 				Code:     "not-google-eligible",
-				Severity: "info",
+				Severity: severityInfo,
 				Message:  fmt.Sprintf("%s is not eligible for Google Rich Results", typeName),
-				Path:     "@type",
+				Path:     keyType,
 			})
 			continue
 		}
@@ -42,9 +42,9 @@ func (r *Registry) ValidateGoogle(obj map[string]any) []Finding {
 		if len(missingRequired) > 0 {
 			findings = append(findings, Finding{
 				Code:     "google-missing-required",
-				Severity: "warning",
+				Severity: severityWarning,
 				Message:  fmt.Sprintf("Google Rich Results: %s is missing required fields: %s", typeName, strings.Join(missingRequired, ", ")),
-				Path:     "@type",
+				Path:     keyType,
 			})
 		}
 
@@ -58,9 +58,9 @@ func (r *Registry) ValidateGoogle(obj map[string]any) []Finding {
 		if len(missingRecommended) > 0 {
 			findings = append(findings, Finding{
 				Code:     "google-missing-recommended",
-				Severity: "info",
+				Severity: severityInfo,
 				Message:  fmt.Sprintf("Google Rich Results: %s is missing recommended fields: %s", typeName, strings.Join(missingRecommended, ", ")),
-				Path:     "@type",
+				Path:     keyType,
 			})
 		}
 	}

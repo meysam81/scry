@@ -37,12 +37,22 @@ type headerCheck struct {
 	contains string // substring to look for (lowercase); empty means header existence suffices
 }
 
+// Technology categories.
+const (
+	techCMS       = "cms"
+	techAnalytics = "analytics"
+	techCDN       = "cdn"
+	techFramework = "framework"
+)
+
+const headerServer = "server"
+
 // signatures is the full set of technology detection rules.
 var signatures = []signature{
 	// ── CMS ──────────────────────────────────────────────────────────────
 	{
 		Name:     "WordPress",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			`<meta name="generator" content="WordPress`,
 			"/wp-content/",
@@ -51,7 +61,7 @@ var signatures = []signature{
 	},
 	{
 		Name:     "Ghost",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			`<meta name="generator" content="Ghost`,
 			"ghost-",
@@ -59,14 +69,14 @@ var signatures = []signature{
 	},
 	{
 		Name:     "Hugo",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			`<meta name="generator" content="Hugo`,
 		},
 	},
 	{
 		Name:     "Next.js",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			"__NEXT_DATA__",
 		},
@@ -74,7 +84,7 @@ var signatures = []signature{
 	},
 	{
 		Name:     "Gatsby",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			"gatsby-",
 		},
@@ -82,14 +92,14 @@ var signatures = []signature{
 	},
 	{
 		Name:     "Astro",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			`<meta name="generator" content="Astro`,
 		},
 	},
 	{
 		Name:     "Nuxt",
-		Category: "cms",
+		Category: techCMS,
 		bodyPatterns: []string{
 			"__NUXT__",
 		},
@@ -99,7 +109,7 @@ var signatures = []signature{
 	// ── Analytics ────────────────────────────────────────────────────────
 	{
 		Name:     "Google Analytics",
-		Category: "analytics",
+		Category: techAnalytics,
 		bodyPatterns: []string{
 			"google-analytics.com",
 			"gtag(",
@@ -108,21 +118,21 @@ var signatures = []signature{
 	},
 	{
 		Name:     "Google Tag Manager",
-		Category: "analytics",
+		Category: techAnalytics,
 		bodyPatterns: []string{
 			"googletagmanager.com",
 		},
 	},
 	{
 		Name:     "Plausible",
-		Category: "analytics",
+		Category: techAnalytics,
 		bodyPatterns: []string{
 			"plausible.io",
 		},
 	},
 	{
 		Name:     "Fathom",
-		Category: "analytics",
+		Category: techAnalytics,
 		bodyPatterns: []string{
 			"usefathom.com",
 		},
@@ -131,38 +141,38 @@ var signatures = []signature{
 	// ── CDN (header-based) ───────────────────────────────────────────────
 	{
 		Name:     "Cloudflare",
-		Category: "cdn",
+		Category: techCDN,
 		headerChecks: []headerCheck{
 			{header: "cf-ray", contains: ""},
-			{header: "server", contains: "cloudflare"},
+			{header: headerServer, contains: "cloudflare"},
 		},
 	},
 	{
 		Name:     "Vercel",
-		Category: "cdn",
+		Category: techCDN,
 		headerChecks: []headerCheck{
 			{header: "x-vercel-id", contains: ""},
-			{header: "server", contains: "vercel"},
+			{header: headerServer, contains: "vercel"},
 		},
 	},
 	{
 		Name:     "Netlify",
-		Category: "cdn",
+		Category: techCDN,
 		headerChecks: []headerCheck{
 			{header: "x-nf-request-id", contains: ""},
-			{header: "server", contains: "netlify"},
+			{header: headerServer, contains: "netlify"},
 		},
 	},
 	{
 		Name:     "AWS CloudFront",
-		Category: "cdn",
+		Category: techCDN,
 		headerChecks: []headerCheck{
 			{header: "x-amz-cf-id", contains: ""},
 		},
 	},
 	{
 		Name:     "Fastly",
-		Category: "cdn",
+		Category: techCDN,
 		headerChecks: []headerCheck{
 			{header: "x-served-by", contains: "cache-"},
 		},
@@ -171,7 +181,7 @@ var signatures = []signature{
 	// ── Frameworks ───────────────────────────────────────────────────────
 	{
 		Name:     "React",
-		Category: "framework",
+		Category: techFramework,
 		bodyPatterns: []string{
 			"data-reactroot",
 			"__REACT",
@@ -179,21 +189,21 @@ var signatures = []signature{
 	},
 	{
 		Name:     "Vue",
-		Category: "framework",
+		Category: techFramework,
 		bodyPatterns: []string{
 			"data-v-",
 		},
 	},
 	{
 		Name:     "Tailwind CSS",
-		Category: "framework",
+		Category: techFramework,
 		assetPatterns: []string{
 			"tailwindcss",
 		},
 	},
 	{
 		Name:     "Bootstrap",
-		Category: "framework",
+		Category: techFramework,
 		assetPatterns: []string{
 			"bootstrap",
 		},

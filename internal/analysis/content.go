@@ -27,7 +27,7 @@ func NewContentAnalyzer() *ContentAnalyzer {
 }
 
 // Name returns the checker name.
-func (c *ContentAnalyzer) Name() string { return "content" }
+func (c *ContentAnalyzer) Name() string { return categoryContent }
 
 // Check runs per-page content quality checks.
 func (c *ContentAnalyzer) Check(_ context.Context, page *model.Page) []model.Issue {

@@ -23,6 +23,19 @@ type PropertyDef struct {
 	EnumValues    []string `json:"enum_values,omitempty"`
 }
 
+// Finding severities. Plain strings rather than model.Severity keep this
+// package decoupled from the audit model.
+const (
+	severityWarning = "warning"
+	severityInfo    = "info"
+)
+
+// JSON-LD keywords.
+const (
+	keyContext = "@context"
+	keyType    = "@type"
+)
+
 // Finding is a schema validation result, decoupled from the audit model.
 type Finding struct {
 	Code     string // e.g. "missing-required-field", "invalid-nested-type"
