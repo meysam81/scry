@@ -1,6 +1,6 @@
 module github.com/meysam81/scry
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/caarlos0/env/v11 v11.4.0
@@ -12,7 +12,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/net v0.51.0
-	golang.org/x/time v0.14.0
+	golang.org/x/time v0.16.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
