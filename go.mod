@@ -1,6 +1,6 @@
 module github.com/meysam81/scry
 
-go 1.25.5
+go 1.27.4
 
 require (
 	github.com/caarlos0/env/v11 v11.4.0
