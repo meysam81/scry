@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.0.3](https://github.com/meysam81/scry/compare/v0.0.2...v0.0.3) (2026-11-13)
+
+
+### Features
+
+* add deep structured-data inspection ([f84d59a](https://github.com/meysam81/scry/commit/f84d59adedc74778c2a4bf2c932d3d2333e1f19e))
+
+
+### Bug Fixes
+
+* **CI:** disable always-failing job ([ac3dbad](https://github.com/meysam81/scry/commit/ac3dbad8a4ee6e667bb110859226e4ca63f92866))
+* **CI:** make sec happy ([8dd0435](https://github.com/meysam81/scry/commit/8dd04356b1a5d0b89ad677c8dd9e0a0b0477abd7))
+* **ci:** pin golangci-lint to v2.15.0 and name the repeated strings ([#44](https://github.com/meysam81/scry/issues/44)) ([e3cd87c](https://github.com/meysam81/scry/commit/e3cd87ca87ab95ece64ce734b6d372bbf02bc520))
+* **deps:** update module github.com/urfave/cli/v3 to v3.8.0 ([#11](https://github.com/meysam81/scry/issues/11)) ([8f9b4c5](https://github.com/meysam81/scry/commit/8f9b4c50d750129abdfe0a13ce9ff4cd8878578f))
+
+
+### Chores
+
+* **deps:** update dependency typescript to v6 ([#9](https://github.com/meysam81/scry/issues/9)) ([09aaef0](https://github.com/meysam81/scry/commit/09aaef0cfefcc8603917f9ea3b13f62d27843c70))
+* **deps:** update docker/login-action action to v4 ([#10](https://github.com/meysam81/scry/issues/10)) ([1092eec](https://github.com/meysam81/scry/commit/1092eec96931e598947a65792b1820bdc0248fe4))
+* **deps:** update docker/setup-buildx-action action to v4 ([#12](https://github.com/meysam81/scry/issues/12)) ([9802513](https://github.com/meysam81/scry/commit/98025131a064f9ae566b178040aa4bff512d7d06))
+* **deps:** update docker/setup-qemu-action action to v4 ([#13](https://github.com/meysam81/scry/issues/13)) ([5fce510](https://github.com/meysam81/scry/commit/5fce5102c799ab6a0802f5d7719618f4e5a5809c))
+* **deps:** update goreleaser/goreleaser-action action to v7 ([#14](https://github.com/meysam81/scry/issues/14)) ([29710f0](https://github.com/meysam81/scry/commit/29710f0f9be6e9ea7adfe8309e85bc3894791d51))
+* **renovate:** inherit from org base ([922af08](https://github.com/meysam81/scry/commit/922af0890e433e7bfa104b28c829cfcbf6bbe888))
+
+
+### CI
+
+* pin actions to commit SHAs, release-please manifest config ([#39](https://github.com/meysam81/scry/issues/39)) ([7955394](https://github.com/meysam81/scry/commit/7955394fa55e3ce4e9fddbdb8d6c2fc55ada59b3))
+* pin pre-commit hooks and CI tool versions ([#48](https://github.com/meysam81/scry/issues/48)) ([ff00f98](https://github.com/meysam81/scry/commit/ff00f98e67671125ebe8c217c5ee9b27d00ce478))
+
 ## [0.0.2](https://github.com/meysam81/scry/compare/v0.0.1...v0.0.2) (2026-03-25)
 
 
