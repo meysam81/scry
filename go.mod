@@ -1,9 +1,9 @@
 module github.com/meysam81/scry
 
-go 1.25.5
+go 1.26.0
 
 require (
-	github.com/caarlos0/env/v11 v11.4.0
+	github.com/caarlos0/env/v11 v11.4.2
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/go-rod/rod v0.116.2
 	github.com/google/cel-go v0.27.0
